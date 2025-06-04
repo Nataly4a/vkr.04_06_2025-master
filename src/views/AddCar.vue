@@ -19,7 +19,7 @@
           </span>
         </div>
 
-        <!-- Серия и номер стс -->
+        <!-- Серия и номер -->
         <div class="input-group">
           <label for="carSTS">Серия и номер СТС:</label>
           <input
