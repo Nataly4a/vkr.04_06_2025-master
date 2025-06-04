@@ -246,7 +246,6 @@ export default {
   color: var(--text-color);
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
-  -webkit-appearance: none; /* Remove default iOS styling */
 }
 
 .search-input:focus {
