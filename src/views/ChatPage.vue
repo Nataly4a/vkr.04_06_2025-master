@@ -288,7 +288,7 @@ export default {
       if (profanityWord) {
         // Удаляем оптимистическое сообщение
         this.messages.splice(tempMessageIndex, 1);
-        alert(`Сообщение не отправлено: содержит запрещенное слово .`);
+        alert(`Сообщение не отправлено: содержит запрещенное слово . Пожалуйста, соблюдайте приличия!`);
         this.newMessage = ""; // Очищаем поле ввода
         return; // Выходим без изменения isSendingMessage
       }
