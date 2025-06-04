@@ -212,9 +212,9 @@ export default {
               if (message.type === 'message') {
                 this.handleNewMessage(message);
               } else if (message.type === 'profanity_detected') {
-                this.$toast.error(message.error);
+                this.$toast.error(message.error || 'Обнаружено запрещенное слово.');
               } else if (message.type === 'error') {
-                this.$toast.error(`Ошибка: ${message.error}`);
+                this.$toast.error(message.error || 'Произошла ошибка.');
               } else if (message.type === 'auth_success') {
                 console.log('Аутентификация успешна');
               }
@@ -327,7 +327,7 @@ export default {
         this.messages = this.messages.filter(
           msg => !(msg.sent_at === messageData.sent_at && msg.isSending)
         );
-        if (error.response && error.response.status === 400) {
+        if (error.response && error.response.status === 400 && error.response.data && error.response.data.error) {
           this.$toast.error(error.response.data.error);
         } else {
           this.$toast.error('Ошибка при отправке сообщения.');
