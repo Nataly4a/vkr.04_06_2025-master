@@ -319,7 +319,7 @@ export default {
       if (!token) return;
       
       const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-      const wsUrl1 = `${wsProtocol}${window.location.host}/ws`;
+      //const wsUrl1 = `${wsProtocol}${window.location.host}/ws`;
       const wsUrl = `wss://unigo-1rot.onrender.com/ws`;
       
       this.ws = new WebSocket(wsUrl);
