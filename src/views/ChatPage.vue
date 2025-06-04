@@ -107,6 +107,7 @@ export default {
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       reconnectDelay: 3000,
+      reconnectTimeoutId: null,
     };
   },
   async created() {
@@ -120,6 +121,11 @@ export default {
   beforeUnmount() {
     if (this.socket) {
       this.socket.close(1000, 'Component unmounted');
+      this.socket = null;
+    }
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
     }
   },
   methods: {
@@ -160,8 +166,8 @@ export default {
         this.messages = response.data.map(msg => ({
           ...msg,
           isCurrentUser: msg.sender_id === this.currentUserId,
-          sender_name: msg.sender_name, // Use backend-provided name
-          sender_surname: msg.sender_surname // Use backend-provided surname
+          sender_name: msg.sender_name,
+          sender_surname: msg.sender_surname
         }));
         this.$nextTick(() => this.scrollToBottom());
       } catch (error) {
@@ -171,66 +177,81 @@ export default {
     },
     initWebSocket(chatId) {
       const connect = () => {
-        try {
-          this.socket = new WebSocket(`${API_CONFIG.WS_URL}/chat/${chatId}`);
-
-          this.socket.onopen = () => {
-            console.log('WebSocket соединение установлено');
-            this.reconnectAttempts = 0;
-            this.socket.send(JSON.stringify({
-              type: 'auth',
-              token: Cookies.get('token'),
-              user_id: this.currentUserId
-            }));
-            this.$toast.success('Подключение к чату установлено.');
-          };
-
-          this.socket.onmessage = (event) => {
-            try {
-              const message = JSON.parse(event.data);
-              if (message.type === 'message') {
-                this.handleNewMessage(message);
-              }
-            } catch (error) {
-              console.error('Ошибка обработки WebSocket сообщения:', error);
-              this.$toast.error('Ошибка обработки сообщения.');
-            }
-          };
-
-          this.socket.onclose = (event) => {
-            console.log('WebSocket соединение закрыто:', event);
-            if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-              const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
-              setTimeout(() => {
-                console.log(`Попытка переподключения ${this.reconnectAttempts + 1}...`);
-                this.reconnectAttempts++;
-                connect();
-              }, delay);
-            } else if (event.code !== 1000) {
-              console.error('Достигнуто максимальное количество попыток переподключения.');
-              this.$toast.error('Не удалось подключиться к чату. Используется резервный режим.');
-            }
-          };
-
-          this.socket.onerror = (error) => {
-            console.error('WebSocket ошибка:', error);
-          };
-        } catch (error) {
-          console.error('Ошибка инициализации WebSocket:', error);
-          this.$toast.error('Ошибка подключения к чату.');
+        if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+          this.socket.close(1000, 'Reconnecting');
+          this.socket = null;
         }
+
+        this.socket = new WebSocket(`${API_CONFIG.WS_URL}/chat/${chatId}`);
+
+        this.socket.onopen = () => {
+          console.log('WebSocket соединение установлено');
+          this.reconnectAttempts = 0;
+          // Отправляем аутентификацию
+          this.socket.send(JSON.stringify({
+            type: 'auth',
+            token: Cookies.get('token'),
+            user_id: this.currentUserId
+          }));
+          this.$toast.success('Подключение к чату установлено.');
+        };
+
+        this.socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            if (message.type === 'message') {
+              this.handleNewMessage(message);
+            } else if (message.type === 'auth_success') {
+              console.log('Аутентификация по WebSocket успешна');
+            } else if (message.type === 'error') {
+              console.error('Ошибка от сервера:', message.error);
+              this.$toast.error(`Ошибка сервера: ${message.error}`);
+            }
+          } catch (error) {
+            console.error('Ошибка обработки WebSocket сообщения:', error);
+            this.$toast.error('Ошибка обработки сообщения.');
+          }
+        };
+
+        this.socket.onclose = (event) => {
+          console.log('WebSocket соединение закрыто:', event);
+          this.socket = null;
+
+          if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+            const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
+            this.reconnectTimeoutId = setTimeout(() => {
+              console.log(`Попытка переподключения ${this.reconnectAttempts + 1}...`);
+              this.reconnectAttempts++;
+              connect();
+            }, delay);
+          } else if (event.code !== 1000) {
+            console.error('Достигнуто максимальное количество попыток переподключения.');
+            this.$toast.error('Не удалось подключиться к чату. Используется резервный режим.');
+          }
+        };
+
+        this.socket.onerror = (error) => {
+          console.error('WebSocket ошибка:', error);
+        };
       };
 
       connect();
     },
     handleNewMessage(message) {
-      this.messages.push({
-        ...message,
-        isCurrentUser: message.sender_id === this.currentUserId,
-        sender_name: message.sender_name, // Use backend-provided name
-        sender_surname: message.sender_surname // Use backend-provided surname
-      });
-      this.$nextTick(() => this.scrollToBottom());
+      // Проверка, что такого сообщения еще нет (по sent_at и content)
+      const exists = this.messages.some(
+        msg => msg.sent_at === message.sent_at && msg.content === message.content && msg.sender_id === message.sender_id
+      );
+      if (!exists) {
+        this.messages.push({
+          ...message,
+          isCurrentUser: message.sender_id === this.currentUserId,
+          sender_name: message.sender_name,
+          sender_surname: message.sender_surname,
+          isSending: false,
+        });
+        this.$nextTick(() => this.scrollToBottom());
+      }
     },
     sendMessage: debounce(async function () {
       if (!this.newMessage.trim()) {
@@ -239,31 +260,34 @@ export default {
       }
 
       this.isSendingMessage = true;
+
+      const sentAt = new Date().toISOString();
       const messageData = {
         type: 'message',
         chat_id: parseInt(this.$route.params.id),
         sender_id: this.currentUserId,
-        content: this.newMessage,
-        sent_at: new Date().toISOString()
+        content: this.newMessage.trim(),
+        sent_at: sentAt
       };
 
       try {
-        // Optimistic update
+        // Оптимистичное добавление сообщения
         this.messages.push({
           ...messageData,
           isCurrentUser: true,
-          sender_name: 'Вы', // Placeholder, will be updated by backend
-          sender_surname: '', // Placeholder, will be updated by backend
+          sender_name: 'Вы',
+          sender_surname: '',
           isSending: true
         });
+
         this.newMessage = "";
         this.$nextTick(() => this.scrollToBottom());
 
-        // Try WebSocket
+        // Отправляем через WebSocket, если он готов
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify(messageData));
         } else {
-          // Fallback to HTTP
+          // Фоллбек на HTTP POST
           await axios.post(
             `${API_CONFIG.BASE_URL}/chat/${this.$route.params.id}/messages`,
             {
@@ -278,19 +302,20 @@ export default {
           );
         }
 
-        // Update message status
+        // Обновляем статус сообщений (isSending = false)
         this.messages = this.messages.map(msg =>
-          msg.sent_at === messageData.sent_at && msg.isSending
+          msg.sent_at === sentAt && msg.isSending
             ? { ...msg, isSending: false }
             : msg
         );
+
         this.$toast.success('Сообщение отправлено.');
       } catch (error) {
         console.error("Ошибка при отправке сообщения:", error);
-        this.$toast.error('Не удалось отправить сообщение.');
-        // Revert optimistic update on failure
+        alert('Не удалось отправить сообщение.');
+        // Удаляем оптимистично добавленное сообщение при ошибке
         this.messages = this.messages.filter(
-          msg => !(msg.sent_at === messageData.sent_at && msg.isSending)
+          msg => !(msg.sent_at === sentAt && msg.isSending)
         );
       } finally {
         this.isSendingMessage = false;
