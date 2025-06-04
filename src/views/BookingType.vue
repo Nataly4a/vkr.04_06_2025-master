@@ -78,29 +78,42 @@ export default {
 
         console.log("вы охуели")
         console.log(Cookies.get("from_route"),Cookies.get("to_route"))
+        let tripId
 
         // Создаем поездку
         console.log("check 2")
-        const tripResponse = await axios.post(API_CONFIG.BASE_URL+'/trip/trip', {
-          route_id: routeId,
-          departureDate: tripData.date,
-          departureTime: tripData.pickUpTime,
-          //arrivalDate: tripData.arrivalDate,
-          arrivalTime: Cookies.get("trip_time"),
-          passengersCount: tripData.passengerCount,
-          car: tripData.selectedCar,
-          price: tripData.price,
-          oversizedLuggageComment: tripData.baggage?.hasOversizedBaggage === "yes" ? tripData.baggage.oversizedBaggageComment : "",
-          childSeatComment: tripData.baggage?.needsChildSeat === "yes" ? tripData.baggage.childSeatComment : "",
-          animalsComment: tripData.baggage?.canTakeAnimals === "yes" ? tripData.baggage.animalsComment : "",
-          tripComment: tripData.comment,
-          bookingType: this.bookingType,
-          canTakeBaggage: tripData.baggage.canTakeBaggage,
-          hasOversizedBaggage: tripData.baggage.hasOversizedBaggage,
-          needsChildSeat: tripData.baggage.needsChildSeat,
-          canTakeAnimals: tripData.baggage.canTakeAnimals,
-        }, { headers: { Authorization: `Bearer ${token}` } });
-        const tripId = tripResponse.data.tripId;
+        try {
+          const tripResponse = await axios.post(API_CONFIG.BASE_URL + '/trip/trip', {
+            route_id: routeId,
+            departureDate: tripData.date,
+            departureTime: tripData.pickUpTime,
+            arrivalTime: Cookies.get("trip_time"),
+            passengersCount: tripData.passengerCount,
+            car: tripData.selectedCar,
+            price: tripData.price,
+            oversizedLuggageComment: tripData.baggage?.hasOversizedBaggage === "yes" ? tripData.baggage.oversizedBaggageComment : "",
+            childSeatComment: tripData.baggage?.needsChildSeat === "yes" ? tripData.baggage.childSeatComment : "",
+            animalsComment: tripData.baggage?.canTakeAnimals === "yes" ? tripData.baggage.animalsComment : "",
+            tripComment: tripData.comment,
+            bookingType: this.bookingType,
+            canTakeBaggage: tripData.baggage.canTakeBaggage,
+            hasOversizedBaggage: tripData.baggage.hasOversizedBaggage,
+            needsChildSeat: tripData.baggage.needsChildSeat,
+            canTakeAnimals: tripData.baggage.canTakeAnimals,
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          tripId = tripResponse.data.tripId;
+
+        } catch (error) {
+          if (error.response && error.response.data && error.response.data.message === 'Только подтвержденные водители могут создавать поездки') {
+            alert('Ошибка: Только подтвержденные водители могут создавать поездки');
+          } else {
+            console.error('Произошла ошибка при создании поездки:', error);
+            alert('Произошла непредвиденная ошибка при создании поездки.');
+          }
+        }
 
         console.log("check 3")
 

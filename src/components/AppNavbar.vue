@@ -216,7 +216,7 @@ export default {
       }
 
       try {
-          const response = await axios.get(API_CONFIG.BASE_URL +'/api/check-diver', {
+          const response = await axios.get(API_CONFIG.BASE_URL +'/trip/check-diver', {
               headers: {
                   Authorization: `Bearer ${Cookies.get("token")}`
               }
@@ -229,7 +229,8 @@ export default {
                   // Разрешаем создание поездки
               } else {
                   console.log('Пользователь не является водителем');
-                  console.alert('Пожалуйста, подождите когда вашу учетную запись подтвердят');
+                  alert('Пожалуйста, подождите когда вашу учетную запись подтвердят');
+                  this.$router.push("/");
                   // Показываем сообщение или блокируем функционал
               }
               return response.data.isDriver;
