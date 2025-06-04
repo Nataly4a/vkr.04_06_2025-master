@@ -85,6 +85,10 @@ import AppNavbar from "@/components/AppNavbar.vue";
 import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/api';
 import { debounce } from 'lodash';
+import leoProfanity from 'leo-profanity';
+
+// Настройка leo-profanity для клиента
+leoProfanity.loadDictionary('ru');
 
 export default {
   components: {
@@ -160,8 +164,8 @@ export default {
         this.messages = response.data.map(msg => ({
           ...msg,
           isCurrentUser: msg.sender_id === this.currentUserId,
-          sender_name: msg.sender_name, // Use backend-provided name
-          sender_surname: msg.sender_surname // Use backend-provided surname
+          sender_name: msg.sender_name,
+          sender_surname: msg.sender_surname
         }));
         this.$nextTick(() => this.scrollToBottom());
       } catch (error) {
@@ -190,6 +194,12 @@ export default {
               const message = JSON.parse(event.data);
               if (message.type === 'message') {
                 this.handleNewMessage(message);
+              } else if (message.type === 'profanity_detected') {
+                this.$toast.error(message.error);
+              } else if (message.type === 'error') {
+                this.$toast.error(`Ошибка: ${message.error}`);
+              } else if (message.type === 'auth_success') {
+                console.log('Аутентификация успешна');
               }
             } catch (error) {
               console.error('Ошибка обработки WebSocket сообщения:', error);
@@ -227,14 +237,20 @@ export default {
       this.messages.push({
         ...message,
         isCurrentUser: message.sender_id === this.currentUserId,
-        sender_name: message.sender_name, // Use backend-provided name
-        sender_surname: message.sender_surname // Use backend-provided surname
+        sender_name: message.sender_name,
+        sender_surname: message.sender_surname
       });
       this.$nextTick(() => this.scrollToBottom());
     },
     sendMessage: debounce(async function () {
       if (!this.newMessage.trim()) {
         this.$toast.warning('Сообщение не может быть пустым.');
+        return;
+      }
+
+      // Проверка на мат на клиенте
+      if (leoProfanity.check(this.newMessage)) {
+        this.$toast.error('Сообщение содержит недопустимые слова и не может быть отправлено.');
         return;
       }
 
@@ -248,22 +264,22 @@ export default {
       };
 
       try {
-        // Optimistic update
+        // Оптимистическое добавление сообщения
         this.messages.push({
           ...messageData,
           isCurrentUser: true,
-          sender_name: 'Вы', // Placeholder, will be updated by backend
-          sender_surname: '', // Placeholder, will be updated by backend
+          sender_name: 'Вы',
+          sender_surname: '',
           isSending: true
         });
         this.newMessage = "";
         this.$nextTick(() => this.scrollToBottom());
 
-        // Try WebSocket
+        // Попытка отправки через WebSocket
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify(messageData));
         } else {
-          // Fallback to HTTP
+          // Фоллбек на HTTP
           await axios.post(
             `${API_CONFIG.BASE_URL}/chat/${this.$route.params.id}/messages`,
             {
@@ -278,7 +294,7 @@ export default {
           );
         }
 
-        // Update message status
+        // Обновляем статус сообщения
         this.messages = this.messages.map(msg =>
           msg.sent_at === messageData.sent_at && msg.isSending
             ? { ...msg, isSending: false }
@@ -287,11 +303,11 @@ export default {
         this.$toast.success('Сообщение отправлено.');
       } catch (error) {
         console.error("Ошибка при отправке сообщения:", error);
-        alert('Не удалось отправить сообщение.');
-        // Revert optimistic update on failure
+        // Откат оптимистического обновления при ошибке
         this.messages = this.messages.filter(
           msg => !(msg.sent_at === messageData.sent_at && msg.isSending)
         );
+        this.$toast.error('Ошибка при отправке сообщения.');
       } finally {
         this.isSendingMessage = false;
       }
