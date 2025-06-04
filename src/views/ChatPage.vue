@@ -92,7 +92,7 @@ leoProfanity.loadDictionary('ru');
 // Добавляем пользовательский список запрещённых слов
 const customProfanityList = [
   'жопа', 'Жопа', 'вагина', 'Вагина', 'Пидорасы', 'пидорасы', 'Тупой', 'Тупая', 'тупой',
-  'тупая', 'сучка', 'Сучка', 'шлюха', 'Шлюха', 'Дура', 'дура', 'Дурак', 'дурак',
+  'тупая', 'сучка', 'сука', 'Сучка', 'шлюха', 'Шлюха', 'Дура', 'дура', 'Дурак', 'дурак',
 ];
 leoProfanity.add(customProfanityList);
 
@@ -721,7 +721,6 @@ export default {
 .loading-icon, .error-icon {
   font-size: 3.5rem;
   opacity: 0.9;
-  animation: spin 1.5s linear infinite;
 }
 
 .loading-state p, .error-state p {
@@ -757,11 +756,6 @@ export default {
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
