@@ -340,6 +340,24 @@
           </div>
         </div>
       </div>
+                <!-- Trip Details Modal -->
+          <div v-if="showTripDetailsModal" class="modal-overlay" @click.self="closeModal">
+            <div class="modal-content" role="dialog" aria-labelledby="trip-details-modal-title">
+              <button class="modal-close" @click="closeModal" aria-label="Закрыть модальное окно">×</button>
+              <h3 id="trip-details-modal-title">Подробности поездки</h3>
+              <div class="trip-details-content">
+                <div v-if="currentTrip" class="trip-details-info">
+                  <p><strong>Маршрут:</strong> {{ currentTrip.departure_location }} → {{ currentTrip.arrival_location }}</p>
+                  <p><strong>Дата и время отправления:</strong> {{ formatDateTime(currentTrip.departure_time) }}</p>
+                  <p><strong>Комментарий к поездке:</strong> {{ currentTrip.comment || 'Нет комментария' }}</p>
+                  <p><strong>Комментарий к крупногабаритному багажу:</strong> {{ currentTrip.oversized_luggage_comment || 'Нет комментария' }}</p>
+                  <p><strong>Комментарий к детскому креслу:</strong> {{ currentTrip.child_seat_comment || 'Нет комментария' }}</p>
+                  <p><strong>Комментарий к животным:</strong> {{ currentTrip.pets_comment || 'Нет комментария' }}</p>
+                </div>
+              </div>
+              <button class="btn-confirm" @click="closeModal" aria-label="Закрыть подробности">Закрыть</button>
+            </div>
+          </div>
 
       <div class="back-button-container">
         <button class="btn-secondary" @click="goBack" aria-label="Вернуться назад">← Назад</button>
@@ -359,44 +377,46 @@ const emitter = mitt();
 
 export default {
   components: { AppNavbar },
-  data() {
-    return {
-      searchParams: { from: "", to: "", date: "", passengers: 1 },
-      trips: [],
-      sortedTrips: [],
-      filteredTrips: [],
-      sortBy: "default",
-      loading: false,
-      error: null,
-      filters: { pets: false, luggage: false, childSeat: false, big_size_luggage: false },
-      showFilters: false,
-      showPassengersModal: false,
-      showOnlyMyBookings: false,
-      showPaymentModal: false,
-      showPaymentConfirmation: false,
-      currentBookingTrip: null,
-      passengers: [],
-      currentLocation: "",
-      modalLocationType: "departure",
-      paymentError: "",
-      transactionId: "",
-      transactionDate: "",
-      locale: "ru-RU",
-      paymentDetails: {
-        cardNumber: "",
-        expiry: "",
-        cvv: "",
-      },
-      paymentErrors: {
-        cardNumber: "",
-        expiry: "",
-        cvv: "",
-      },
-      isPaymentProcessing: false,
-      isLoadingPassengers: false,
-      errorLoadingPassengers: null,
-    };
-  },
+data() {
+  return {
+    searchParams: { from: "", to: "", date: "", passengers: 1 },
+    trips: [],
+    sortedTrips: [],
+    filteredTrips: [],
+    sortBy: "default",
+    loading: false,
+    error: null,
+    filters: { pets: false, luggage: false, childSeat: false, big_size_luggage: false },
+    showFilters: false,
+    showPassengersModal: false,
+    showOnlyMyBookings: false,
+    showPaymentModal: false,
+    showPaymentConfirmation: false,
+    currentBookingTrip: null,
+    passengers: [],
+    currentLocation: "",
+    modalLocationType: "departure",
+    paymentError: "",
+    transactionId: "",
+    transactionDate: "",
+    locale: "ru-RU",
+    paymentDetails: {
+      cardNumber: "",
+      expiry: "",
+      cvv: "",
+    },
+    paymentErrors: {
+      cardNumber: "",
+      expiry: "",
+      cvv: "",
+    },
+    isPaymentProcessing: false,
+    isLoadingPassengers: false,
+    errorLoadingPassengers: null,
+    showTripDetailsModal: false,
+    currentTrip: null,
+  };
+},
   computed: {
     filteredPassengers() {
       return this.showOnlyMyBookings
@@ -775,20 +795,24 @@ export default {
         this.isLoadingPassengers = false;
       }
     },
-    closeModal() {
-      this.showPaymentModal = false;
-      this.showPassengersModal = false;
-      this.showPaymentConfirmation = false;
-      this.paymentError = "";
-      this.currentBookingTrip = null;
-      this.transactionId = "";
-      this.transactionDate = "";
-      this.resetPaymentForm();
-      this.passengers = [];
-      this.errorLoadingPassengers = null;
-    },
+      closeModal() {
+        this.showPaymentModal = false;
+        this.showPassengersModal = false;
+        this.showPaymentConfirmation = false;
+        this.showTripDetailsModal = false; // Close trip details modal
+        this.paymentError = "";
+        this.currentBookingTrip = null;
+        this.currentTrip = null; // Reset current trip
+        this.transactionId = "";
+        this.transactionDate = "";
+        this.resetPaymentForm();
+        this.passengers = [];
+        this.errorLoadingPassengers = null;
+      },
     showTripDetails(trip) {
       this.$router.push(`/trip/${trip.id}`);
+      this.currentTrip = trip;
+      this.showTripDetailsModal = true;
     },
     goBack() {
       this.$router.go(-1);
@@ -1508,7 +1532,23 @@ input:focus {
   padding: 4px 10px;
   border-radius: 8px;
 }
+.trip-details-content {
+  padding: 20px;
+  background: var(--secondary-color);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
 
+.trip-details-info p {
+  margin: 12px 0;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.trip-details-info p strong {
+  font-weight: 600;
+  color: var(--text-color);
+}
 .passenger-gender.female {
   background: #fce4ec;
   color: #c2185b;
