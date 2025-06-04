@@ -318,7 +318,7 @@ export default {
       const token = Cookies.get('token');
       if (!token) return;
       
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      //const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
       //const wsUrl1 = `${wsProtocol}${window.location.host}/ws`;
       const wsUrl = `wss://unigo-1rot.onrender.com/ws`;
       
@@ -367,13 +367,13 @@ export default {
           { headers: { 'Authorization': `Bearer ${this.token}` } }
         );
         return userResponse.data.user_id;
-      try {
+      /*try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.userId;
       } catch (e) {
         console.error('Error parsing token:', e);
         return null;
-      }
+      }*/
     },
     
     showToastNotification(notification) {
