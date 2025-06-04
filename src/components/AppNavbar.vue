@@ -21,6 +21,12 @@
         <button class="menu-item my-trips-button" @click="navWithClose({ name: 'my-trips-page' })">
           <span class="menu-text">Мои поездки</span>
         </button>
+        <button class="menu-item" @click="navWithClose('/notifications')">
+          <span class="menu-text">Уведомления</span>
+          <span v-if="unreadNotificationsCount > 0" class="notification-badge">
+            {{ unreadNotificationsCount }}
+          </span>
+        </button>
         <button class="menu-item" @click="goToPublishTrip">
           <span class="menu-text">Опубликовать</span>
         </button>
@@ -120,6 +126,8 @@ export default {
       isMobileMenuOpen: false,
       windowWidth: window.innerWidth,
       isDarkTheme: false,
+      unreadNotificationsCount: 0,
+      ws: null
     };
   },
   created() {
@@ -305,11 +313,102 @@ export default {
         this.closeMobileMenu();
       }
     },
+    //новое
+    setupWebSocket() {
+      const token = Cookies.get('token');
+      if (!token) return;
+      
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      const wsUrl1 = `${wsProtocol}${window.location.host}/ws`;
+      const wsUrl = `wss://unigo-1rot.onrender.com/ws`;
+      
+      this.ws = new WebSocket(wsUrl);
+      
+      this.ws.onopen = () => {
+        // Получаем userId из токена или другого источника
+        const userId = this.getUserIdFromToken(token);
+        if (userId) {
+          this.ws.send(JSON.stringify({
+            type: 'auth',
+            user_id: userId
+          }));
+        }
+      };
+      
+      this.ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'unread_notifications') {
+          this.unreadNotificationsCount = data.count;
+        }
+        
+        if (data.type === 'new_notification') {
+          this.unreadNotificationsCount += 1;
+          // Можно также показать toast-уведомление
+          this.showToastNotification(data.notification);
+          alert(data.notification);
+        }
+      };
+      
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      this.ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        // Попытка переподключения через 5 секунд
+        setTimeout(() => this.setupWebSocket(), 5000);
+      };
+    },
+    
+    async getUserIdFromToken(token) {
+      const userResponse = await axios.get(
+          API_CONFIG.BASE_URL +'/user/get-id',
+          { headers: { 'Authorization': `Bearer ${this.token}` } }
+        );
+        return userResponse.data.user_id;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId;
+      } catch (e) {
+        console.error('Error parsing token:', e);
+        return null;
+      }
+    },
+    
+    showToastNotification(notification) {
+      // Реализация toast-уведомления
+      // Можно использовать библиотеку или собственный компонент
+      console.log('New notification:', notification);
+    },
+    
+    async fetchUnreadNotificationsCount() {
+      try {
+        const token = Cookies.get('token');
+        if (!token) return;
+        
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/notification/unread/count`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        this.unreadNotificationsCount = response.data.count;
+      } catch (error) {
+        console.error('Error fetching unread notifications count:', error);
+      }
+    }
   },
   async mounted() {
     await this.isUserAuthenticated();
     document.addEventListener("click", this.handleOutsideClick);
     window.addEventListener('resize', this.handleResize);
+
+    if (this.isAuthenticated) {
+      this.setupWebSocket();
+      this.fetchUnreadNotificationsCount();
+    }
+
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleOutsideClick);
@@ -317,6 +416,18 @@ export default {
     // Убедимся, что скролл разблокирован
     document.body.style.overflow = '';
   },
+  watch: {
+    isAuthenticated(newVal) {
+      if (newVal) {
+        this.setupWebSocket();
+        this.fetchUnreadNotificationsCount();
+      } else if (this.ws) {
+        this.ws.close();
+        this.ws = null;
+        this.unreadNotificationsCount = 0;
+      }
+    }
+  }
 };
 </script>
 
