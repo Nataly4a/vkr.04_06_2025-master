@@ -591,6 +591,8 @@ export default {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
+        console.log(response)
         
         // Обновляем данные поездки
         trip.rating = this.tempRating[bookingId];
