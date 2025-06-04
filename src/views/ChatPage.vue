@@ -34,7 +34,7 @@
           />
         </div>
         <div class="message-content">
-          <span class="message-sender">{{ message.senderName }}</span>
+          <span class="message-sender">{{ message.sender_name }} {{ message.sender_surname }}</span>
           <span class="message-text">{{ message.content }}</span>
           <span class="message-time">{{ formatTime(message.sent_at) }}</span>
           <span v-if="message.isSending" class="message-status">Отправка...</span>
@@ -160,7 +160,8 @@ export default {
         this.messages = response.data.map(msg => ({
           ...msg,
           isCurrentUser: msg.sender_id === this.currentUserId,
-          senderName: msg.sender_id === this.currentUserId ? 'Вы' : 'Собеседник'
+          sender_name: msg.sender_name, // Use backend-provided name
+          sender_surname: msg.sender_surname // Use backend-provided surname
         }));
         this.$nextTick(() => this.scrollToBottom());
       } catch (error) {
@@ -226,8 +227,8 @@ export default {
       this.messages.push({
         ...message,
         isCurrentUser: message.sender_id === this.currentUserId,
-        senderName: message.sender_id === this.currentUserId ? 'Вы' : 'Собеседник',
-        isSending: false
+        sender_name: message.sender_name, // Use backend-provided name
+        sender_surname: message.sender_surname // Use backend-provided surname
       });
       this.$nextTick(() => this.scrollToBottom());
     },
@@ -251,7 +252,8 @@ export default {
         this.messages.push({
           ...messageData,
           isCurrentUser: true,
-          senderName: 'Вы',
+          sender_name: 'Вы', // Placeholder, will be updated by backend
+          sender_surname: '', // Placeholder, will be updated by backend
           isSending: true
         });
         this.newMessage = "";
