@@ -2,7 +2,7 @@
   <div class="chat-page">
     <AppNavbar />
     <div class="chat-header">
-      <h2>{{ chat.companion_name || 'Чат' }}</h2>
+      <h2>{{ chat.name }}</h2>
       <div class="trip-info">
         <span>Поездка: {{ chat.trip }}</span>
         <span>Дата: {{ chat.date }}</span>
@@ -34,7 +34,7 @@
           />
         </div>
         <div class="message-content">
-          <span class="message-sender">{{ message.sender_name || 'Неизвестно' }} {{ message.sender_surname || '' }}</span>
+          <span class="message-sender">{{ message.sender_name }} {{ message.sender_surname }}</span>
           <span class="message-text">{{ message.content }}</span>
           <span class="message-time">{{ formatTime(message.sent_at) }}</span>
           <span v-if="message.isSending" class="message-status">Отправка...</span>
@@ -107,10 +107,6 @@ export default {
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       reconnectDelay: 3000,
-      passengerName: null,
-      passengerSurname: null,
-      driverName: null,
-      driverSurname: null,
     };
   },
   async created() {
@@ -143,11 +139,6 @@ export default {
         this.companionId = this.chat.passenger_id === this.currentUserId 
           ? this.chat.driver_id 
           : this.chat.passenger_id;
-        // Store passenger and driver names for WebSocket fallback
-        this.passengerName = response.data.passenger_name;
-        this.passengerSurname = response.data.passenger_surname;
-        this.driverName = response.data.driver_name;
-        this.driverSurname = response.data.driver_surname;
       } catch (error) {
         console.error("Ошибка при загрузке данных о чате:", error);
         this.errorLoadingChat = true;
@@ -169,8 +160,8 @@ export default {
         this.messages = response.data.map(msg => ({
           ...msg,
           isCurrentUser: msg.sender_id === this.currentUserId,
-          sender_name: msg.sender_name || (msg.sender_id === this.currentUserId ? 'Вы' : this.chat.companion_name.split(' ')[0] || 'Неизвестно'),
-          sender_surname: msg.sender_surname || (msg.sender_id === this.currentUserId ? '' : this.chat.companion_name.split(' ')[1] || '')
+          sender_name: msg.sender_name, // Use backend-provided name
+          sender_surname: msg.sender_surname // Use backend-provided surname
         }));
         this.$nextTick(() => this.scrollToBottom());
       } catch (error) {
@@ -233,14 +224,11 @@ export default {
       connect();
     },
     handleNewMessage(message) {
-      const isCurrentUser = message.sender_id === this.currentUserId;
-      const senderName = message.sender_name || (isCurrentUser ? 'Вы' : this.chat.passenger_id === this.currentUserId ? this.driverName : this.passengerName || 'Неизвестно');
-      const senderSurname = message.sender_surname || (isCurrentUser ? '' : this.chat.passenger_id === this.currentUserId ? this.driverSurname : this.passengerSurname || '');
       this.messages.push({
         ...message,
-        isCurrentUser,
-        sender_name: senderName,
-        sender_surname: senderSurname
+        isCurrentUser: message.sender_id === this.currentUserId,
+        sender_name: message.sender_name, // Use backend-provided name
+        sender_surname: message.sender_surname // Use backend-provided surname
       });
       this.$nextTick(() => this.scrollToBottom());
     },
@@ -264,8 +252,8 @@ export default {
         this.messages.push({
           ...messageData,
           isCurrentUser: true,
-          sender_name: 'Вы',
-          sender_surname: '',
+          sender_name: 'Вы', // Placeholder, will be updated by backend
+          sender_surname: '', // Placeholder, will be updated by backend
           isSending: true
         });
         this.newMessage = "";
