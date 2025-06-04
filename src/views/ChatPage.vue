@@ -85,6 +85,10 @@ import AppNavbar from "@/components/AppNavbar.vue";
 import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/api';
 import { debounce } from 'lodash';
+import leoProfanity from 'leo-profanity';
+
+leoProfanity.loadDictionary('ru');
+leoProfanity.setOptions({ censor: '***' });
 
 export default {
   components: {
@@ -258,7 +262,11 @@ export default {
         this.$toast.warning('Сообщение не может быть пустым.');
         return;
       }
-
+      // Фильтрация на клиенте
+        const cleanMessage = leoProfanity.clean(this.newMessage.trim());
+        if (cleanMessage !== this.newMessage.trim()) {
+          this.$toast.warning('Сообщение содержит недопустимые слова, они были заменены.');
+        }
       this.isSendingMessage = true;
 
       const sentAt = new Date().toISOString();
@@ -266,7 +274,7 @@ export default {
         type: 'message',
         chat_id: parseInt(this.$route.params.id),
         sender_id: this.currentUserId,
-        content: this.newMessage.trim(),
+        content: cleanMessage,
         sent_at: sentAt
       };
 
