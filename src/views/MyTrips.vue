@@ -64,9 +64,6 @@
             </div>
             
             <div class="trip-actions">
-              <button class="action-button" @click.stop="openEditModal(trip)" aria-label="Редактировать поездку">
-                Редактировать
-              </button>
               <button class="action-button reschedule" @click.stop="openRescheduleModal(trip)" aria-label="Перенести поездку">
                 Перенести
               </button>
@@ -118,55 +115,13 @@
         <span class="no-trips-icon">🚍</span>
         <p>У вас нет опубликованных поездок.</p>
         <button class="create-trip-btn" @click="publish-trip" aria-label="Создать новую поездку">
+          Создать поездку
         </button>
       </div>
 
       <button class="back-button" @click="goToHome" aria-label="Вернуться на главную">
         Назад
       </button>
-
-      <!-- Модальное окно редактирования -->
-      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal">
-          <button class="modal-close-button" @click="closeModal" aria-label="Закрыть модальное окно">×</button>
-          <h3>Редактировать поездку</h3>
-          <form @submit.prevent="saveEdit">
-            <div class="form-group">
-              <label for="departure_location">Откуда:</label>
-              <input id="departure_location" v-model="editingTrip.departure_location" required aria-label="Место отправления">
-            </div>
-            <div class="form-group">
-              <label for="arrival_location">Куда:</label>
-              <input id="arrival_location" v-model="editingTrip.arrival_location" required aria-label="Место прибытия">
-            </div>
-            <div class="form-group">
-              <label for="seats">Пассажиры:</label>
-              <input id="seats" type="number" v-model="editingTrip.seats" required aria-label="Количество пассажиров" min="1">
-            </div>
-            <div class="form-group">
-              <label>Остановки:</label>
-              <div class="stops-list">
-                <div v-for="(stop, index) in editingTrip.stops" :key="index" class="stop-item">
-                  <input v-model="editingTrip.stops[index]" :aria-label="`Остановка ${index + 1}`">
-                  <button type="button" class="remove-stop" @click="removeStop(index)" aria-label="Удалить остановку">
-                    ×
-                  </button>
-                </div>
-              </div>
-              <div class="add-stop">
-                <input id="new-stop" type="text" v-model="newStop" placeholder="Добавить остановку" aria-label="Новая остановка">
-                <button type="button" class="add-stop-button" @click="addStop" aria-label="Добавить остановку">
-                  +
-                </button>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="cancel-btn" @click="closeModal">Отмена</button>
-              <button type="submit" class="save-button">Сохранить</button>
-            </div>
-          </form>
-        </div>
-      </div>
 
       <!-- Модальное окно переноса -->
       <div v-if="showRescheduleModal" class="modal-overlay" @click.self="closeModal">
@@ -282,26 +237,17 @@ export default {
   data() {
     return {
       userTrips: [],
-      showEditModal: false,
       showRescheduleModal: false,
       showPassengersModal: false,
       isLoadingTrips: false,
       isLoadingPassengers: false,
       errorLoadingTrips: false,
       errorLoadingPassengers: false,
-      editingTrip: {
-        id: null,
-        departure_location: '',
-        arrival_location: '',
-        seats: 0,
-        stops: []
-      },
       rescheduleData: {
         tripId: null,
         newDate: '',
         newTime: ''
       },
-      newStop: '',
       currentTripPassengers: [],
       selectedTripId: null,
       modalLocationType: 'departure',
@@ -398,18 +344,6 @@ export default {
       this.$router.push("/create-trip");
     },
 
-    openEditModal(trip) {
-      this.editingTrip = {
-        id: trip.id,
-        departure_location: trip.departure_location,
-        arrival_location: trip.arrival_location,
-        seats: trip.seats,
-        stops: [...(trip.stops || [])]
-      };
-      this.newStop = '';
-      this.showEditModal = true;
-    },
-
     openRescheduleModal(trip) {
       const date = new Date(trip.departure_time);
       const formattedDate = date.toISOString().split('T')[0];
@@ -467,49 +401,11 @@ export default {
     },
 
     closeModal() {
-      this.showEditModal = false;
       this.showRescheduleModal = false;
       this.showPassengersModal = false;
-      this.newStop = '';
       this.currentTripPassengers = [];
       this.errorLoadingPassengers = false;
       this.selectedTripId = null;
-    },
-
-    addStop() {
-      if (this.newStop.trim()) {
-        this.editingTrip.stops.push(this.newStop.trim());
-        this.newStop = '';
-      }
-    },
-    
-    removeStop(index) {
-      this.editingTrip.stops.splice(index, 1);
-    },
-
-    async saveEdit() {
-      try {
-        const token = Cookies.get('token');
-        const updatedTrip = {
-          ...this.editingTrip,
-          stops: this.editingTrip.stops.filter(stop => stop.trim() !== '')
-        };
-
-        await axios.put(API_CONFIG.BASE_URL + `/trip/${this.editingTrip.id}`, updatedTrip, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        await this.notifyPassengers(this.editingTrip.id, 'Поездка была отредактирована. Проверьте новые детали.');
-
-        this.closeModal();
-        this.loadUserTrips();
-        this.$toast.success('Поездка успешно обновлена! Пассажиры уведомлены.');
-      } catch (error) {
-        console.error("Ошибка при обновлении поездки:", error);
-        this.$toast.error('Ошибка при обновлении поездки');
-      }
     },
 
     async saveReschedule() {
