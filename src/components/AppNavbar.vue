@@ -326,7 +326,7 @@ export default {
       
       this.ws.onopen = () => {
         // Получаем userId из токена или другого источника
-        const userId = this.getUserIdFromToken(token);
+        const userId = this.getUserIdFromToken();
         if (userId) {
           this.ws.send(JSON.stringify({
             type: 'auth',
@@ -361,7 +361,7 @@ export default {
       };
     },
     
-    async getUserIdFromToken(token) {
+    async getUserIdFromToken() {
       const userResponse = await axios.get(
           API_CONFIG.BASE_URL +'/user/get-id',
           { headers: { 'Authorization': `Bearer ${this.token}` } }
