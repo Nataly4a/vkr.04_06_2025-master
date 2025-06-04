@@ -21,7 +21,7 @@
         <button class="menu-item my-trips-button" @click="navWithClose({ name: 'my-trips-page' })">
           <span class="menu-text">Мои поездки</span>
         </button>
-        <button class="menu-item" @click="navWithClose('/notifications')">
+        <button class="menu-item" @click="navWithClose('/notificationsUser')">
           <span class="menu-text">Уведомления</span>
           <span v-if="unreadNotificationsCount > 0" class="notification-badge">
             {{ unreadNotificationsCount }}

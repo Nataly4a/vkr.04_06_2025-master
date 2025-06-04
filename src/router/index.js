@@ -33,6 +33,7 @@ import SetPassword from '@/views/SetPassword.vue'; // Импортируем к�
 import OperatorPanel from '@/views/OperatorPanel.vue';
 import EditDriverLicense from "@/views/EditDriverLicense.vue";
 import NotificationsPage from '@/views/NotificationsPage.vue'; // Импортируйте ваш компонент
+import Notifications from '@/views/Notifications.vue'; // Импортируйте ваш компонент
 import UserVerification from "@/views/UserVerification.vue";
 import CarVerification from "@/views/CarVerification.vue"; // Страница проверки автомобилей
 import DriverProfile from '@/views/DriverProfile.vue'; 
@@ -86,6 +87,11 @@ const routes = [
     path: '/notifications',
     name: 'Notifications',
     component: NotificationsPage
+  },
+  {
+    path: '/notificationsUser',
+    name: 'NotificationsUser',
+    component: Notifications
   },
   {
     path: "/user-verification", // Новый путь для страницы проверки пользователей
