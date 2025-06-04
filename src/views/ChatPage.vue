@@ -312,7 +312,6 @@ export default {
         this.$toast.success('Сообщение отправлено.');
       } catch (error) {
         console.error("Ошибка при отправке сообщения:", error);
-        alert('Не удалось отправить сообщение.');
         // Удаляем оптимистично добавленное сообщение при ошибке
         this.messages = this.messages.filter(
           msg => !(msg.sent_at === sentAt && msg.isSending)
