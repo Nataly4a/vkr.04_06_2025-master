@@ -364,7 +364,7 @@ export default {
     async getUserIdFromToken() {
       const userResponse = await axios.get(
           API_CONFIG.BASE_URL +'/user/get-id',
-          { headers: { 'Authorization': `Bearer ${this.token}` } }
+          { headers: { 'Authorization': `Bearer ${Cookies.get('token')}` } }
         );
         return userResponse.data.user_id;
       /*try {
