@@ -85,14 +85,13 @@ import AppNavbar from "@/components/AppNavbar.vue";
 import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/api';
 import { debounce } from 'lodash';
-import leoProfanity from 'leo-profanity';
+import leoProfanity from 'leo-profanity';//тональность
 
 // Настройка leo-profanity для клиента
 leoProfanity.loadDictionary('ru');
 // Добавляем пользовательский список запрещённых слов
 const customProfanityList = [
-  'жопа', 'Жопа', 'вагина', 'Вагина', 'Пидорасы', 'пидорасы', 'Тупой', 'Тупая', 'тупой',
-  'тупая', 'сучка', 'сука', 'Сучка', 'шлюха', 'Шлюха', 'Дура', 'дура', 'Дурак', 'дурак',
+  'жопа', 'вагина', 'пидорасы', 'тупой', 'тупая', 'сука', 'Сучка', 'шлюха', 'Дура', 'Дурак', 'мудак', 'блядь', 'тварь', 'лох','лошара','блядина','гондон','тварь','шмара','говно','сволочь','ебать', 'ахуеть','пиздец','ебать'         
 ];
 leoProfanity.add(customProfanityList);
 
