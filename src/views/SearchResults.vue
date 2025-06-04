@@ -810,7 +810,6 @@ data() {
         this.errorLoadingPassengers = null;
       },
     showTripDetails(trip) {
-      this.$router.push(`/trip/${trip.id}`);
       this.currentTrip = trip;
       this.showTripDetailsModal = true;
     },
