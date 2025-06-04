@@ -108,9 +108,14 @@
             </div>
             <div class="user-info-row">
               <span class="info-label">Статус:</span>
-              <span :class="['status', { confirmed: user.isConfirmed }]">
-                {{ user.isConfirmed ? 'Подтверждено' : 'Не подтверждено' }}
-              </span>
+              <span :class="['status', 
+                          { 'passenger': user.status === 0,
+                            'unconfirmed-driver': user.status === 1,
+                            'confirmed-driver': user.status === 2 }]">
+              {{ user.status === 0 ? 'Пассажир' 
+                : user.status === 1 ? 'Неподтвержденный водитель'
+                : 'Подтвержденный водитель' }}
+            </span>
             </div>
             <div class="user-info-row">
               <span class="info-label">Автомобиль:</span>
@@ -1020,6 +1025,27 @@ export default {
 
 .trip-item p {
   margin: 3px 0;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.passenger {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.unconfirmed-driver {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+.confirmed-driver {
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 /* Адаптивные стили */
