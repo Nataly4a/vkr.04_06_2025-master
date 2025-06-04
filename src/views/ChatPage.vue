@@ -85,7 +85,7 @@ import AppNavbar from "@/components/AppNavbar.vue";
 import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/api';
 import { debounce } from 'lodash';
-import leoProfanity from 'leo-profanity';//тональность
+import leoProfanity from 'leo-profanity';
 
 // Настройка leo-profanity для клиента
 leoProfanity.loadDictionary('ru');
@@ -288,7 +288,7 @@ export default {
       if (profanityWord) {
         // Удаляем оптимистическое сообщение
         this.messages.splice(tempMessageIndex, 1);
-        this.$toast.error(`Сообщение не отправлено: содержит нецензурную лексику "${profanityWord}".`);
+        this.$toast.error(`Сообщение не отправлено: содержит запрещенное слово "${profanityWord}".`);
         this.newMessage = ""; // Очищаем поле ввода
         return; // Выходим без изменения isSendingMessage
       }
