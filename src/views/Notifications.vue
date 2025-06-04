@@ -95,7 +95,7 @@ export default {
           return;
         }
 
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/notifications/${this.$route.params.userId}`, {
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/notification/${this.$route.params.userId}`, {
           params: {
             limit: this.limit,
             offset: this.offset
@@ -125,7 +125,7 @@ export default {
       try {
         const token = Cookies.get('token');
         await axios.put(
-          `${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`,
+          `${API_CONFIG.BASE_URL}/notification/${notificationId}/read`,
           {},
           {
             headers: {
@@ -148,7 +148,7 @@ export default {
       try {
         const token = Cookies.get('token');
         await axios.put(
-          `${API_CONFIG.BASE_URL}/notifications/read-all`,
+          `${API_CONFIG.BASE_URL}/notification/read-all`,
           {},
           {
             headers: {
