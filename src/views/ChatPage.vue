@@ -266,7 +266,6 @@ export default {
         return;
       }
 
-      this.isSendingMessage = true;
       const messageData = {
         type: 'message',
         chat_id: parseInt(this.$route.params.id),
@@ -292,10 +291,10 @@ export default {
         this.messages.splice(tempMessageIndex, 1);
         this.$toast.error(`Сообщение не отправлено: содержит нецензурную лексику "${profanityWord}".`);
         this.newMessage = ""; // Очищаем поле ввода
-        this.isSendingMessage = false;
-        return;
+        return; // Выходим без изменения isSendingMessage
       }
 
+      this.isSendingMessage = true; // Устанавливаем индикатор только после проверки на мат
       try {
         // Попытка отправки через WebSocket
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
