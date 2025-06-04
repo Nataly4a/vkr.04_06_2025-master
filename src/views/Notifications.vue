@@ -97,7 +97,7 @@ export default {
 
         const userResponse = await axios.get(
           API_CONFIG.BASE_URL +'/user/get-id',
-          { headers: { 'Authorization': `Bearer ${this.token}` } }
+          { headers: { 'Authorization': `Bearer ${token}` } }
         );
 
         const response = await axios.get(`${API_CONFIG.BASE_URL}/notification/${userResponse.data.user_id}`, {
@@ -188,9 +188,14 @@ export default {
       // Добавьте другие условия для разных типов уведомлений
     },
     
-    setupWebSocket() {
+    async setupWebSocket() {
       const token = Cookies.get('token');
       if (!token) return;
+
+      const userResponse = await axios.get(
+        API_CONFIG.BASE_URL +'/user/get-id',
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
       
       //const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
       //const wsUrl = `${wsProtocol}${window.location.host}/ws`;
