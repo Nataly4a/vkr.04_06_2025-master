@@ -163,7 +163,6 @@ export default {
 
 <style scoped>
 /* Базовые стили и переменные */
-/* Базовые стили и переменные */
 :root {
   --bg-color: #f9fafb; /* Softer background for better contrast */
   --text-color: #111827;
