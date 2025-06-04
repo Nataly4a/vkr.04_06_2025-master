@@ -215,6 +215,30 @@ export default {
         return;
       }
 
+      try {
+          const response = await axios.get(API_CONFIG.BASE_URL +'/api/check-diver', {
+              headers: {
+                  Authorization: `Bearer ${Cookies.get("token")}`
+              }
+          });
+          
+          if (response.data.success) {
+              if (response.data.isDriver) {
+                  console.log('Пользователь является водителем');
+                  this.navWithClose("/publish-trip");
+                  // Разрешаем создание поездки
+              } else {
+                  console.log('Пользователь не является водителем');
+                  console.alert('Пожалуйста, подождите когда вашу учетную запись подтвердят');
+                  // Показываем сообщение или блокируем функционал
+              }
+              return response.data.isDriver;
+          }
+          return false;
+      } catch (error) {
+          console.error('Ошибка при проверке статуса:', error);
+      }
+
       this.navWithClose("/publish-trip");
     },
 
