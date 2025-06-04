@@ -78,6 +78,7 @@ export default {
 
         console.log("вы охуели")
         console.log(Cookies.get("from_route"),Cookies.get("to_route"))
+        let tripId
 
         // Создаем поездку
         console.log("check 2")
@@ -103,7 +104,7 @@ export default {
             headers: { Authorization: `Bearer ${token}` }
           });
 
-          const tripId = tripResponse.data.tripId;
+          tripId = tripResponse.data.tripId;
 
         } catch (error) {
           if (error.response && error.response.data && error.response.data.message === 'Только подтвержденные водители могут создавать поездки') {
