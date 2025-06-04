@@ -93,7 +93,6 @@ leoProfanity.loadDictionary('ru');
 const customProfanityList = [
   'жопа', 'Жопа', 'вагина', 'Вагина', 'Пидорасы', 'пидорасы', 'Тупой', 'Тупая', 'тупой',
   'тупая', 'сучка', 'Сучка', 'шлюха', 'Шлюха', 'Дура', 'дура', 'Дурак', 'дурак',
-  // Добавьте свои слова здесь
 ];
 leoProfanity.add(customProfanityList);
 
@@ -103,7 +102,7 @@ function findProfanityWord(text, profanityList) {
   for (const word of profanityList) {
     const lowerWord = word.toLowerCase();
     if (lowerText.includes(lowerWord)) {
-      return word; // Возвращаем оригинальное слово для корректного отображения регистра
+      return word;
     }
   }
   return null;
@@ -267,13 +266,6 @@ export default {
         return;
       }
 
-      // Проверка на мат на клиенте
-      const profanityWord = findProfanityWord(this.newMessage, customProfanityList);
-      if (profanityWord) {
-        this.$toast.error(`Сообщение содержит нецензурную лексику: "${profanityWord}".`);
-        return;
-      }
-
       this.isSendingMessage = true;
       const messageData = {
         type: 'message',
@@ -283,18 +275,28 @@ export default {
         sent_at: new Date().toISOString()
       };
 
-      try {
-        // Оптимистическое добавление сообщения
-        this.messages.push({
-          ...messageData,
-          isCurrentUser: true,
-          sender_name: 'Вы',
-          sender_surname: '',
-          isSending: true
-        });
-        this.newMessage = "";
-        this.$nextTick(() => this.scrollToBottom());
+      // Оптимистическое добавление сообщения
+      const tempMessageIndex = this.messages.push({
+        ...messageData,
+        isCurrentUser: true,
+        sender_name: 'Вы',
+        sender_surname: '',
+        isSending: true
+      }) - 1;
+      this.$nextTick(() => this.scrollToBottom());
 
+      // Проверка на мат на клиенте после попытки отправки
+      const profanityWord = findProfanityWord(this.newMessage, customProfanityList);
+      if (profanityWord) {
+        // Удаляем оптимистическое сообщение
+        this.messages.splice(tempMessageIndex, 1);
+        this.$toast.error(`Сообщение не отправлено: содержит нецензурную лексику "${profanityWord}".`);
+        this.newMessage = ""; // Очищаем поле ввода
+        this.isSendingMessage = false;
+        return;
+      }
+
+      try {
         // Попытка отправки через WebSocket
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify(messageData));
@@ -334,6 +336,7 @@ export default {
         }
       } finally {
         this.isSendingMessage = false;
+        this.newMessage = ""; // Очищаем поле ввода после успешной или неуспешной отправки
       }
     }, 300),
     clearInput() {
@@ -377,56 +380,56 @@ export default {
 :root {
   --bg-color: #ffffff;
   --text-color: #1a202c;
-  --container-bg: #f9fafb;
-  --border-color: #e2e8f0;
-  --accent-color: #004281;
-  --accent-hover: #003366;
-  --secondary-color: #6b7280;
-  --message-you-bg: #004281;
+  --container-bg: #f7f9fc;
+  --border-color: #e0e6ed;
+  --accent-color: #007bff;
+  --accent-hover: #0056b3;
+  --secondary-color: #6c757d;
+  --message-you-bg: linear-gradient(135deg, #007bff, #0056b3);
   --message-you-text: #ffffff;
-  --message-other-bg: #e5e7eb;
+  --message-other-bg: #ffffff;
   --message-other-text: #1a202c;
-  --danger-color: #ef4444;
-  --danger-hover: #dc2626;
-  --success-color: #10b981;
-  --success-hover: #059669;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --success-color: #28a745;
+  --success-hover: #218838;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .dark-theme {
-  --bg-color: #0f172a;
-  --text-color: #e2e8f0;
-  --container-bg: #1e293b;
-  --border-color: #475569;
-  --accent-color: #60a5fa;
-  --accent-hover: #3b82f6;
-  --secondary-color: #94a3b8;
-  --message-you-bg: #60a5fa;
+  --bg-color: #1a1f2b;
+  --text-color: #e9ecef;
+  --container-bg: #2c3241;
+  --border-color: #3a4353;
+  --accent-color: #4dabf7;
+  --accent-hover: #339af0;
+  --secondary-color: #adb5bd;
+  --message-you-bg: linear-gradient(135deg, #4dabf7, #339af0);
   --message-you-text: #ffffff;
-  --message-other-bg: #334155;
-  --message-other-text: #e2e8f0;
-  --danger-color: #f87171;
-  --danger-hover: #ef4444;
-  --success-color: #34d399;
-  --success-hover: #10b981;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --message-other-bg: #2d3343;
+  --message-other-text: #e9ecef;
+  --danger-color: #e74c3c;
+  --danger-hover: #d62c1a;
+  --success-color: #2ecc71;
+  --success-hover: #27ae60;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .chat-page {
-  max-width: 640px;
+  max-width: 720px;
   margin: 80px auto 0;
   padding: 24px;
-  background-color: var(--bg-color);
-  border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg-color), #f0f2f5);
+  border-radius: 16px;
   box-shadow: var(--shadow-md);
   min-height: calc(100vh - 96px);
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .chat-header {
@@ -434,14 +437,19 @@ export default {
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 2px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-header h2 {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--accent-color);
   margin: 0 0 12px;
   line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .trip-info {
@@ -451,112 +459,130 @@ export default {
   font-size: 0.95rem;
   color: var(--secondary-color);
   font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 8px;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background-color: var(--container-bg);
-  border-radius: 10px;
+  padding: 24px;
+  background: var(--container-bg);
+  border-radius: 16px;
   margin-bottom: 20px;
-  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border-color);
-  transition: background-color 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  max-height: 70vh;
 }
 
 .message {
   display: flex;
   margin-bottom: 20px;
-  animation: fadeIn 0.4s ease-out;
+  animation: slideIn 0.5s ease-out;
 }
 
 .message-avatar img {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--accent-color);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.message-avatar img:hover {
+  transform: scale(1.1);
 }
 
 .message-content {
-  margin-left: 12px;
-  max-width: 75%;
+  margin-left: 16px;
+  max-width: 70%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .message-sender {
   font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-color);
+  font-size: 1rem;
+  color: var(--accent-color);
+  text-transform: capitalize;
 }
 
 .message-text {
-  background-color: var(--message-other-bg);
+  background: var(--message-other-bg);
   color: var(--message-other-text);
   padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 1rem;
-  line-height: 1.5;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  line-height: 1.6;
   word-break: break-word;
   box-shadow: var(--shadow-sm);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .message-you .message-content {
   margin-left: auto;
-  margin-right: 12px;
+  margin-right: 16px;
   text-align: right;
 }
 
 .message-you .message-text {
-  background-color: var(--message-you-bg);
+  background: var(--message-you-bg);
   color: var(--message-you-text);
-  border-radius: 16px 16px 4px 16px;
+  border-radius: 12px 12px 4px 12px;
 }
 
 .message-other .message-text {
-  border-radius: 16px 16px 16px 4px;
+  border-radius: 12px 12px 12px 4px;
 }
 
 .message-time {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--secondary-color);
   margin-top: 4px;
   font-weight: 400;
+  opacity: 0.8;
 }
 
 .message-status {
-  font-size: 0.8rem;
-  color: var(--secondary-color);
+  font-size: 0.85rem;
+  color: var(--success-color);
   font-style: italic;
   margin-top: 4px;
+  animation: pulse 1.5s infinite;
 }
 
 .scroll-bottom-btn {
   position: fixed;
-  bottom: 90px;
+  bottom: 100px;
   right: 32px;
-  background-color: var(--accent-color);
+  background: var(--accent-color);
   color: var(--message-you-text);
   border: none;
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  z-index: 10;
 }
 
 .scroll-bottom-btn:hover,
 .scroll-bottom-btn:focus-visible {
-  background-color: var(--accent-hover);
-  transform: scale(1.1);
+  background: var(--accent-hover);
+  transform: scale(1.15) rotate(360deg);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .scroll-bottom-btn:focus-visible {
@@ -565,50 +591,53 @@ export default {
 }
 
 .scroll-icon {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
 }
 
 .chat-input {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background-color: var(--container-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, var(--container-bg), #ffffff);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .chat-input input {
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 14px 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 1.1rem;
   color: var(--text-color);
-  background-color: var(--bg-color);
-  transition: all 0.2s ease;
+  background: var(--bg-color);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .chat-input input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .chat-input input:disabled {
   background-color: var(--border-color);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .action-button {
-  padding: 12px 20px;
+  padding: 14px 22px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -616,21 +645,22 @@ export default {
 }
 
 .action-button.send {
-  background-color: var(--accent-color);
+  background: var(--accent-color);
   color: var(--message-you-text);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .action-button.send:disabled {
-  background-color: var(--secondary-color);
+  background: var(--secondary-color);
   color: var(--text-color);
   cursor: not-allowed;
   box-shadow: none;
+  opacity: 0.7;
 }
 
 .action-button.send:hover:not(:disabled),
 .action-button.send:focus-visible:not(:disabled) {
-  background-color: var(--accent-hover);
+  background: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -641,27 +671,28 @@ export default {
 }
 
 .action-button.clear-input {
-  background-color: var(--danger-color);
+  background: var(--danger-color);
   color: var(--message-you-text);
-  border: 1px solid var(--danger-color);
+  border: 2px solid var(--danger-color);
   font-weight: 700;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .action-button.clear-input:hover:not(:disabled),
 .action-button.clear-input:focus-visible:not(:disabled) {
-  background-color: var(--danger-hover);
+  background: var(--danger-hover);
   border-color: var(--danger-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
 .action-button.clear-input:disabled {
-  background-color: var(--secondary-color);
+  background: var(--secondary-color);
   border-color: var(--secondary-color);
   color: var(--text-color);
   cursor: not-allowed;
   box-shadow: none;
+  opacity: 0.7;
 }
 
 .send-text {
@@ -669,7 +700,7 @@ export default {
 }
 
 .send-icon {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 .loading-state, .error-state {
@@ -683,35 +714,37 @@ export default {
   gap: 16px;
   border: 2px dashed var(--border-color);
   margin-bottom: 24px;
-  background-color: var(--container-bg);
+  background: linear-gradient(135deg, var(--container-bg), #e9ecef);
+  box-shadow: var(--shadow-sm);
 }
 
 .loading-icon, .error-icon {
-  font-size: 3rem;
-  opacity: 0.8;
+  font-size: 3.5rem;
+  opacity: 0.9;
+  animation: spin 1.5s linear infinite;
 }
 
 .loading-state p, .error-state p {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 500;
 }
 
 .retry-button {
   padding: 12px 24px;
-  background-color: var(--accent-color);
+  background: var(--accent-color);
   color: var(--message-you-text);
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .retry-button:hover,
 .retry-button:focus-visible {
-  background-color: var(--accent-hover);
+  background: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -721,9 +754,20 @@ export default {
   outline-offset: 2px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 @media (min-width: 480px) {
@@ -734,14 +778,14 @@ export default {
   }
   
   .chat-header h2 {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
   
   .trip-info {
     flex-direction: row;
-    gap: 20px;
+    gap: 24px;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   
   .send-text {
@@ -749,12 +793,12 @@ export default {
   }
   
   .message-avatar img {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
   }
   
   .message-content {
-    max-width: 70%;
+    max-width: 65%;
   }
 }
 
@@ -762,37 +806,38 @@ export default {
   .chat-page {
     padding: 16px;
     margin-top: 64px;
+    max-width: 100%;
   }
   
   .chat-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
   
   .trip-info {
-    font-size: 0.85rem;
-    gap: 6px;
+    font-size: 0.9rem;
+    gap: 8px;
   }
   
   .message-text {
-    padding: 10px 12px;
-    font-size: 0.95rem;
+    padding: 10px 14px;
+    font-size: 1rem;
   }
   
   .chat-input input {
-    padding: 10px 12px;
-    font-size: 0.95rem;
+    padding: 12px 14px;
+    font-size: 1rem;
   }
   
   .action-button {
-    padding: 10px 16px;
-    font-size: 0.9rem;
+    padding: 12px 18px;
+    font-size: 0.95rem;
   }
   
   .scroll-bottom-btn {
-    bottom: 80px;
+    bottom: 90px;
     right: 16px;
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
   }
 }
 </style>
