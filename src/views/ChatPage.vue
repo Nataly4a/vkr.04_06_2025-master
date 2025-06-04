@@ -89,6 +89,16 @@ import leoProfanity from 'leo-profanity';
 
 // Настройка leo-profanity для клиента
 leoProfanity.loadDictionary('ru');
+// Добавляем пользовательский список запрещённых слов
+const customProfanityList = [
+  'жопа', 'Жопа','вагина','Вагина', 'Пидорасы', 'пидорасы' ,'Тупой', 'Тупая', 'тупой',
+'тупая', 'сучка','Сучка','шлюха','Шлюха','Дура',
+  'дура',
+  'Дурак',
+  'дурак',
+  // Добавьте свои слова здесь
+];
+leoProfanity.add(customProfanityList);
 
 export default {
   components: {
