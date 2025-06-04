@@ -325,9 +325,10 @@ export default {
       this.ws = new WebSocket(wsUrl);
       
       this.ws.onopen = () => {
+        console.log('WebSocket подключен');
         // Получаем userId из токена или другого источника
         const userId = this.getUserIdFromToken();
-        if (userId) {
+        if (userId && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
             type: 'auth',
             user_id: userId
