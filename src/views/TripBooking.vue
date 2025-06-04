@@ -387,7 +387,7 @@ export default {
           seats_booked: trip.seats_booked || 1,
           stops: Array.isArray(trip.stops) ? trip.stops.join(', ') : trip.stops || 'Нет',
           driver_id: trip.driver_id,
-          trip_status: trip.trip_status || 'active',
+          trip_status: trip.trip_status || 'last',
           rating: trip.rating || null,
           comment: trip.comment || null,
           rating_date: trip.rating_date || null,
