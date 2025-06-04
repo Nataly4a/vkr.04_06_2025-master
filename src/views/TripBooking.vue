@@ -286,7 +286,7 @@ export default {
       return this.bookedTrips.filter(trip => trip.trip_status === 'active');
     },
     completedTrips() {
-      return this.bookedTrips.filter(trip => trip.trip_status === 'completed');
+      return this.bookedTrips.filter(trip => trip.trip_status === 'last');
     },
     filteredPassengers() {
       if (this.showOnlyMyBookings && this.currentUserId) {
