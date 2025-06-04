@@ -122,6 +122,56 @@
                 <span>{{ trip.stops || 'Нет' }}</span>
               </div>
             </div>
+
+            <div class="rating-section">
+              <div v-if="trip.rating">
+                <p><strong>Ваша оценка:</strong></p>
+                <div class="rating-display">
+                  <span class="rating-stars">
+                    ★ {{ trip.rating }} 
+                  </span>
+                  <span class="rating-date">
+                    ({{ formatDate(trip.rating_date) }})
+                  </span>
+                </div>
+                <div v-if="trip.comment">
+                  <p><strong>Комментарий:</strong></p>
+                  <p class="rating-comment">"{{ trip.comment }}"</p>
+                </div>
+              </div>
+              
+              <div v-else class="rating-form">
+                <p><strong>Оцените поездку:</strong></p>
+                <div class="rating-input">
+                  <button
+                    v-for="star in 5"
+                    :key="star"
+                    class="star-button"
+                    :class="{ 'active': tempRating[trip.booking_id] >= star }"
+                    @click="setTempRating(trip.booking_id, star)"
+                    :aria-label="`Оценить на ${star} звезд`"
+                  >
+                    ★
+                  </button>
+                </div>
+                <textarea
+                  v-model="tempComment[trip.booking_id]"
+                  placeholder="Ваш комментарий (необязательно)"
+                  class="rating-comment-input"
+                ></textarea>
+                <button 
+                  class="submit-rating-btn"
+                  @click="submitRating(trip)"
+                  :disabled="isSubmittingRating[trip.booking_id]"
+                >
+                  <span v-if="isSubmittingRating[trip.booking_id]">Отправка...</span>
+                  <span v-else>Отправить оценку</span>
+                </button>
+                <p v-if="ratingError[trip.booking_id]" class="error-message">
+                  {{ ratingError[trip.booking_id] }}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -225,6 +275,10 @@ export default {
       errorLoadingPassengers: null,
       currentUserId: null,
       selectedTrip: null,
+      tempRating: {},
+      tempComment: {},
+      isSubmittingRating: {},
+      ratingError: {},
     };
   },
   computed: {
@@ -334,6 +388,9 @@ export default {
           stops: Array.isArray(trip.stops) ? trip.stops.join(', ') : trip.stops || 'Нет',
           driver_id: trip.driver_id,
           trip_status: trip.trip_status || 'active',
+          rating: trip.rating || null,
+          comment: trip.comment || null,
+          rating_date: trip.rating_date || null,
         }));
 
         if (trips.length === 0) {
@@ -504,6 +561,60 @@ export default {
     handleImageError(event) {
       event.target.src = '/default-avatar.jpg';
     },
+    //новое
+    setTempRating(bookingId, rating) {
+      this.$set(this.tempRating, bookingId, rating);
+    },
+    
+    async submitRating(trip) {
+      const bookingId = trip.booking_id;
+      
+      // Валидация
+      if (!this.tempRating[bookingId]) {
+        this.$set(this.ratingError, bookingId, "Пожалуйста, выберите оценку");
+        return;
+      }
+      
+      this.$set(this.isSubmittingRating, bookingId, true);
+      this.$set(this.ratingError, bookingId, null);
+      
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.post(
+          API_CONFIG.BASE_URL + '/booking/rate',
+          {
+            booking_id: bookingId,
+            rating: this.tempRating[bookingId],
+            comment: this.tempComment[bookingId] || null,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        
+        // Обновляем данные поездки
+        trip.rating = this.tempRating[bookingId];
+        trip.comment = this.tempComment[bookingId] || null;
+        trip.rating_date = new Date().toISOString();
+        
+        // Очищаем временные данные
+        this.$delete(this.tempRating, bookingId);
+        this.$delete(this.tempComment, bookingId);
+        
+        this.$notify({
+          title: "Спасибо!",
+          text: "Ваша оценка сохранена",
+          type: "success",
+        });
+      } catch (error) {
+        console.error("Ошибка при отправке оценки:", error);
+        this.$set(this.ratingError, bookingId, 
+          error.response?.data?.message || "Ошибка при отправке оценки");
+      } finally {
+        this.$delete(this.isSubmittingRating, bookingId);
+      }
+    },
+  
   },
 };
 </script>
@@ -1022,6 +1133,93 @@ export default {
   color: var(--text-color);
   margin-bottom: 20px;
   text-align: center; /* Center location info */
+}
+
+.rating-section {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.rating-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rating-input {
+  display: flex;
+  gap: 5px;
+}
+
+.star-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.2s;
+  padding: 0 2px;
+}
+
+.star-button.active {
+  color: gold;
+}
+
+.star-button:hover {
+  transform: scale(1.1);
+}
+
+.rating-comment-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 60px;
+}
+
+.submit-rating-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-rating-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-stars {
+  color: gold;
+  font-size: 18px;
+}
+
+.rating-date {
+  color: #777;
+  font-size: 14px;
+}
+
+.rating-comment {
+  font-style: italic;
+  color: #555;
+  padding: 5px 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.error-message {
+  color: #ff5252;
+  font-size: 14px;
 }
 
 @keyframes fadeIn {
