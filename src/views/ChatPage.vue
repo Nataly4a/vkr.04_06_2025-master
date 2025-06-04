@@ -91,14 +91,23 @@ import leoProfanity from 'leo-profanity';
 leoProfanity.loadDictionary('ru');
 // Добавляем пользовательский список запрещённых слов
 const customProfanityList = [
-  'жопа', 'Жопа','вагина','Вагина', 'Пидорасы', 'пидорасы' ,'Тупой', 'Тупая', 'тупой',
-'тупая', 'сучка','Сучка','шлюха','Шлюха','Дура',
-  'дура',
-  'Дурак',
-  'дурак',
+  'жопа', 'Жопа', 'вагина', 'Вагина', 'Пидорасы', 'пидорасы', 'Тупой', 'Тупая', 'тупой',
+  'тупая', 'сучка', 'Сучка', 'шлюха', 'Шлюха', 'Дура', 'дура', 'Дурак', 'дурак',
   // Добавьте свои слова здесь
 ];
 leoProfanity.add(customProfanityList);
+
+// Функция для поиска конкретного матерного слова
+function findProfanityWord(text, profanityList) {
+  const lowerText = text.toLowerCase();
+  for (const word of profanityList) {
+    const lowerWord = word.toLowerCase();
+    if (lowerText.includes(lowerWord)) {
+      return word; // Возвращаем оригинальное слово для корректного отображения регистра
+    }
+  }
+  return null;
+}
 
 export default {
   components: {
@@ -259,8 +268,9 @@ export default {
       }
 
       // Проверка на мат на клиенте
-      if (leoProfanity.check(this.newMessage)) {
-        this.$toast.error('Сообщение содержит недопустимые слова и не может быть отправлено.');
+      const profanityWord = findProfanityWord(this.newMessage, customProfanityList);
+      if (profanityWord) {
+        this.$toast.error(`Сообщение содержит нецензурную лексику: "${profanityWord}".`);
         return;
       }
 
@@ -317,7 +327,11 @@ export default {
         this.messages = this.messages.filter(
           msg => !(msg.sent_at === messageData.sent_at && msg.isSending)
         );
-        this.$toast.error('Ошибка при отправке сообщения.');
+        if (error.response && error.response.status === 400) {
+          this.$toast.error(error.response.data.error);
+        } else {
+          this.$toast.error('Ошибка при отправке сообщения.');
+        }
       } finally {
         this.isSendingMessage = false;
       }
