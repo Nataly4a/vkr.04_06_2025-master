@@ -230,7 +230,7 @@ export default {
               } else {
                   console.log('Пользователь не является водителем');
                   alert('Пожалуйста, подождите когда вашу учетную запись подтвердят');
-                  this.$router.push("/HomePage");
+                  this.$router.push("/goToHome");
                   // Показываем сообщение или блокируем функционал
               }
               return response.data.isDriver;
