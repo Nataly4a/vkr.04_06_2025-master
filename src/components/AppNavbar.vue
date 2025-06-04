@@ -216,7 +216,7 @@ export default {
       }
 
       try {
-          const response = await axios.get(API_CONFIG.BASE_URL +'/api/check-diver', {
+          const response = await axios.get(API_CONFIG.BASE_URL +'/api/trip/check-diver', {
               headers: {
                   Authorization: `Bearer ${Cookies.get("token")}`
               }
