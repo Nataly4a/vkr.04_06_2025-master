@@ -95,7 +95,12 @@ export default {
           return;
         }
 
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/notification/${this.$route.params.userId}`, {
+        const userResponse = await axios.get(
+          API_CONFIG.BASE_URL +'/user/get-id',
+          { headers: { 'Authorization': `Bearer ${this.token}` } }
+        );
+
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/notification/${userResponse.data.user_id}`, {
           params: {
             limit: this.limit,
             offset: this.offset
@@ -187,8 +192,9 @@ export default {
       const token = Cookies.get('token');
       if (!token) return;
       
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-      const wsUrl = `${wsProtocol}${window.location.host}/ws`;
+      //const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      //const wsUrl = `${wsProtocol}${window.location.host}/ws`;
+      const wsUrl = `wss://unigo-1rot.onrender.com/ws`;
       
       this.ws = new WebSocket(wsUrl);
       
@@ -196,7 +202,7 @@ export default {
         // Аутентификация через WebSocket
         this.ws.send(JSON.stringify({
           type: 'auth',
-          user_id: this.$route.params.userId
+          user_id: userResponse.data.user_id
         }));
       };
       
