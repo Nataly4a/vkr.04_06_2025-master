@@ -91,7 +91,7 @@ import leoProfanity from 'leo-profanity';
 leoProfanity.loadDictionary('ru');
 // Добавляем пользовательский список запрещённых слов
 const customProfanityList = [
-  'жопа', 'вагина', 'пидорасы', 'тупой', 'тупая', 'сука', 'Сучка', 'шлюха', 'Дура', 'Дурак', 'мудак', 'блядь', 'тварь', 'лох','лошара','блядина','гондон','тварь','шмара','говно','сволочь','ебать', 'ахуеть','пиздец','ебать'         
+  'жопа', 'вагина', 'пидорасы', 'тупой', 'тупая', 'сука', 'Сучка', 'шлюха', 'Дура', 'Дурак', 'мудак', 'блядь', 'тварь', 'лох','лошара','блядина','гондон','тварь','шара','говно','сволочь','ебать', 'ахуеть','пиздец','ебать'         
 ];
 leoProfanity.add(customProfanityList);
 
@@ -163,7 +163,7 @@ export default {
       } catch (error) {
         console.error("Ошибка при загрузке данных о чате:", error);
         this.errorLoadingChat = true;
-        this.$toast.error('Не удалось загрузить данные чата.');
+        alert('Не удалось загрузить данные чата.');
       } finally {
         this.isLoadingChat = false;
       }
@@ -187,7 +187,7 @@ export default {
         this.$nextTick(() => this.scrollToBottom());
       } catch (error) {
         console.error("Ошибка при загрузке сообщений:", error);
-        this.$toast.error('Не удалось загрузить сообщения.');
+        alert('Не удалось загрузить сообщения.');
       }
     },
     initWebSocket(chatId) {
@@ -203,7 +203,7 @@ export default {
               token: Cookies.get('token'),
               user_id: this.currentUserId
             }));
-            this.$toast.success('Подключение к чату установлено.');
+            alert('Подключение к чату установлено.');
           };
 
           this.socket.onmessage = (event) => {
@@ -212,15 +212,15 @@ export default {
               if (message.type === 'message') {
                 this.handleNewMessage(message);
               } else if (message.type === 'profanity_detected') {
-                this.$toast.error(message.error || 'Обнаружено запрещенное слово.');
+                alert(message.error || 'Обнаружено запрещенное слово.');
               } else if (message.type === 'error') {
-                this.$toast.error(message.error || 'Произошла ошибка.');
+                alert(message.error || 'Произошла ошибка.');
               } else if (message.type === 'auth_success') {
                 console.log('Аутентификация успешна');
               }
             } catch (error) {
               console.error('Ошибка обработки WebSocket сообщения:', error);
-              this.$toast.error('Ошибка обработки сообщения.');
+              alert('Ошибка обработки сообщения.');
             }
           };
 
@@ -235,7 +235,7 @@ export default {
               }, delay);
             } else if (event.code !== 1000) {
               console.error('Достигнуто максимальное количество попыток переподключения.');
-              this.$toast.error('Не удалось подключиться к чату. Используется резервный режим.');
+              alert('Не удалось подключиться к чату. Используется резервный режим.');
             }
           };
 
@@ -244,7 +244,7 @@ export default {
           };
         } catch (error) {
           console.error('Ошибка инициализации WebSocket:', error);
-          this.$toast.error('Ошибка подключения к чату.');
+          alert('Ошибка подключения к чату.');
         }
       };
 
@@ -261,7 +261,7 @@ export default {
     },
     sendMessage: debounce(async function () {
       if (!this.newMessage.trim()) {
-        this.$toast.warning('Сообщение не может быть пустым.');
+        alert('Сообщение не может быть пустым.');
         return;
       }
 
@@ -288,7 +288,7 @@ export default {
       if (profanityWord) {
         // Удаляем оптимистическое сообщение
         this.messages.splice(tempMessageIndex, 1);
-        this.$toast.error(`Сообщение не отправлено: содержит запрещенное слово "${profanityWord}".`);
+        alert(`Сообщение не отправлено: содержит запрещенное слово . Пожалуйста, соблюдайте приличия!`);
         this.newMessage = ""; // Очищаем поле ввода
         return; // Выходим без изменения isSendingMessage
       }
@@ -320,18 +320,15 @@ export default {
             ? { ...msg, isSending: false }
             : msg
         );
-        this.$toast.success('Сообщение отправлено.');
+        alert('Сообщение отправлено.');
       } catch (error) {
         console.error("Ошибка при отправке сообщения:", error);
         // Откат оптимистического обновления при ошибке
         this.messages = this.messages.filter(
           msg => !(msg.sent_at === messageData.sent_at && msg.isSending)
         );
-        if (error.response && error.response.status === 400 && error.response.data && error.response.data.error) {
-          this.$toast.error(error.response.data.error);
-        } else {
-          this.$toast.error('Ошибка при отправке сообщения.');
-        }
+        const errorMessage = error.response?.data?.error || error.message || 'Ошибка при отправке сообщения.';
+        alert(errorMessage);
       } finally {
         this.isSendingMessage = false;
         this.newMessage = ""; // Очищаем поле ввода после успешной или неуспешной отправки
@@ -339,7 +336,7 @@ export default {
     }, 300),
     clearInput() {
       this.newMessage = "";
-      this.$toast.info('Поле ввода очищено.');
+      alert('Поле ввода очищено.');
     },
     scrollToBottom() {
       this.$nextTick(() => {
