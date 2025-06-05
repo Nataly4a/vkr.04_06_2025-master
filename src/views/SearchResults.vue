@@ -19,10 +19,8 @@
       <div v-if="showPaymentModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content" role="dialog" aria-labelledby="payment-modal-title">
           <button class="modal-close" @click="closeModal" aria-label="Закрыть модальное окно">×</button>
-
           <template v-if="!showPaymentConfirmation">
             <h3 id="payment-modal-title">Оплата поездки</h3>
-
             <div class="safety-notification">
               <div class="safety-icon">⚠️</div>
               <div class="safety-content">
@@ -35,8 +33,6 @@
                 </ul>
               </div>
             </div>
-
-            <!-- Demo Payment Form -->
             <div class="payment-form">
               <div class="form-group">
                 <label for="card-number">Номер карты</label>
@@ -102,8 +98,6 @@
               </div>
             </div>
           </template>
-
-          <!-- Payment Confirmation -->
           <div v-if="showPaymentConfirmation" class="confirmation-screen">
             <div class="confirmation-icon">✓</div>
             <p class="confirmation-text">Оплата успешно завершена!</p>
@@ -193,7 +187,7 @@
             <div class="driver-info">
               <router-link :to="`/driver/${trip.driver_id}`" :aria-label="`Профиль водителя ${trip.name} ${trip.surname}`">
                 <img
-                  :src="URL.createObjectURL(trip.avatarUrl) || '/images/default-avatar.jpg'"
+                  :src="trip.avatarUrl || '/images/default-avatar.jpg'"
                   alt="Аватар водителя"
                   class="driver-avatar"
                   @error="handleImageError"
@@ -252,9 +246,9 @@
               </div>
               <div class="price-info">
                 <span class="price-label">Сумма бронирования:</span>
-                <span class="price-value">{{ trip.cost*0.1 }} ₽</span>
+                <span class="price-value">{{ trip.cost * 0.1 }} ₽</span>
                 <span v-if="searchParams.passengers > 1" class="price-per-person">
-                  ({{ Math.round(trip.cost*0.1 / searchParams.passengers) }} ₽/чел.)
+                  ({{ Math.round(trip.cost * 0.1 / searchParams.passengers) }} ₽/чел.)
                 </span>
               </div>
             </div>
@@ -340,24 +334,25 @@
           </div>
         </div>
       </div>
-                <!-- Trip Details Modal -->
-          <div v-if="showTripDetailsModal" class="modal-overlay" @click.self="closeModal">
-            <div class="modal-content" role="dialog" aria-labelledby="trip-details-modal-title">
-              <button class="modal-close" @click="closeModal" aria-label="Закрыть модальное окно">×</button>
-              <h3 id="trip-details-modal-title">Подробности поездки</h3>
-              <div class="trip-details-content">
-                <div v-if="currentTrip" class="trip-details-info">
-                  <p><strong>Маршрут:</strong> {{ currentTrip.departure_location }} → {{ currentTrip.arrival_location }}</p>
-                  <p><strong>Дата и время отправления:</strong> {{ formatDateTime(currentTrip.departure_time) }}</p>
-                  <p><strong>Комментарий к поездке:</strong> {{ currentTrip.comment || 'Нет комментария' }}</p>
-                  <p><strong>Комментарий к крупногабаритному багажу:</strong> {{ currentTrip.oversized_luggage_comment || 'Нет комментария' }}</p>
-                  <p><strong>Комментарий к детскому креслу:</strong> {{ currentTrip.child_seat_comment || 'Нет комментария' }}</p>
-                  <p><strong>Комментарий к животным:</strong> {{ currentTrip.pets_comment || 'Нет комментария' }}</p>
-                </div>
-              </div>
-              <button class="btn-confirm" @click="closeModal" aria-label="Закрыть подробности">Закрыть</button>
+
+      <!-- Trip Details Modal -->
+      <div v-if="showTripDetailsModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content" role="dialog" aria-labelledby="trip-details-modal-title">
+          <button class="modal-close" @click="closeModal" aria-label="Закрыть модальное окно">×</button>
+          <h3 id="trip-details-modal-title">Подробности поездки</h3>
+          <div class="trip-details-content">
+            <div v-if="currentTrip" class="trip-details-info">
+              <p><strong>Маршрут:</strong> {{ currentTrip.departure_location }} → {{ currentTrip.arrival_location }}</p>
+              <p><strong>Дата и время отправления:</strong> {{ formatDateTime(currentTrip.departure_time) }}</p>
+              <p><strong>Комментарий к поездке:</strong> {{ currentTrip.comment || 'Нет комментария' }}</p>
+              <p><strong>Комментарий к крупногабаритному багажу:</strong> {{ currentTrip.oversized_luggage_comment || 'Нет комментария' }}</p>
+              <p><strong>Комментарий к детскому креслу:</strong> {{ currentTrip.child_seat_comment || 'Нет комментария' }}</p>
+              <p><strong>Комментарий к животным:</strong> {{ currentTrip.pets_comment || 'Нет комментария' }}</p>
             </div>
           </div>
+          <button class="btn-confirm" @click="closeModal" aria-label="Закрыть подробности">Закрыть</button>
+        </div>
+      </div>
 
       <div class="back-button-container">
         <button class="btn-secondary" @click="goBack" aria-label="Вернуться назад">← Назад</button>
@@ -377,46 +372,46 @@ const emitter = mitt();
 
 export default {
   components: { AppNavbar },
-data() {
-  return {
-    searchParams: { from: "", to: "", date: "", passengers: 1 },
-    trips: [],
-    sortedTrips: [],
-    filteredTrips: [],
-    sortBy: "default",
-    loading: false,
-    error: null,
-    filters: { pets: false, luggage: false, childSeat: false, big_size_luggage: false },
-    showFilters: false,
-    showPassengersModal: false,
-    showOnlyMyBookings: false,
-    showPaymentModal: false,
-    showPaymentConfirmation: false,
-    currentBookingTrip: null,
-    passengers: [],
-    currentLocation: "",
-    modalLocationType: "departure",
-    paymentError: "",
-    transactionId: "",
-    transactionDate: "",
-    locale: "ru-RU",
-    paymentDetails: {
-      cardNumber: "",
-      expiry: "",
-      cvv: "",
-    },
-    paymentErrors: {
-      cardNumber: "",
-      expiry: "",
-      cvv: "",
-    },
-    isPaymentProcessing: false,
-    isLoadingPassengers: false,
-    errorLoadingPassengers: null,
-    showTripDetailsModal: false,
-    currentTrip: null,
-  };
-},
+  data() {
+    return {
+      searchParams: { from: "", to: "", date: "", passengers: 1 },
+      trips: [],
+      sortedTrips: [],
+      filteredTrips: [],
+      sortBy: "default",
+      loading: false,
+      error: null,
+      filters: { pets: false, luggage: false, childSeat: false, big_size_luggage: false },
+      showFilters: false,
+      showPassengersModal: false,
+      showOnlyMyBookings: false,
+      showPaymentModal: false,
+      showPaymentConfirmation: false,
+      currentBookingTrip: null,
+      passengers: [],
+      currentLocation: "",
+      modalLocationType: "departure",
+      paymentError: "",
+      transactionId: "",
+      transactionDate: "",
+      locale: "ru-RU",
+      paymentDetails: {
+        cardNumber: "",
+        expiry: "",
+        cvv: "",
+      },
+      paymentErrors: {
+        cardNumber: "",
+        expiry: "",
+        cvv: "",
+      },
+      isPaymentProcessing: false,
+      isLoadingPassengers: false,
+      errorLoadingPassengers: null,
+      showTripDetailsModal: false,
+      currentTrip: null,
+    };
+  },
   computed: {
     filteredPassengers() {
       return this.showOnlyMyBookings
@@ -460,21 +455,41 @@ data() {
         this.error = "Не удалось загрузить параметры поиска";
       }
     },
+    async fetchAvatar(userId) {
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-img/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'blob',
+        });
+        if (response.data) {
+          return URL.createObjectURL(response.data);
+        }
+      } catch (error) {
+        console.error(`Ошибка при загрузке аватара для userId ${userId}:`, error);
+        return '/images/default-avatar.jpg';
+      }
+    },
     async fetchTrips() {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.get(API_CONFIG.BASE_URL + "/trip/searchResult", {
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/trip/searchResult`, {
           params: {
             departure_location: this.searchParams.from,
             arrival_location: this.searchParams.to,
             date: this.searchParams.date,
             seats: this.searchParams.passengers,
           },
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+          headers: { Authorization: `Bearer ${Cookies.get('token')}` },
         });
         if (response.data.success) {
-          this.trips = response.data.trips || [];
+          this.trips = await Promise.all(response.data.trips.map(async (trip) => ({
+            ...trip,
+            avatarUrl: await this.fetchAvatar(trip.driver_id),
+          })));
           this.sortedTrips = [...this.trips];
           this.filteredTrips = [...this.trips];
           if (!this.trips.length) {
@@ -668,7 +683,7 @@ data() {
       try {
         const token = Cookies.get("token");
         await axios.post(
-          API_CONFIG.BASE_URL + "/payment/confirm",
+          `${API_CONFIG.BASE_URL}/payment/confirm`,
           {
             trip_id: this.currentBookingTrip.id,
             payment_id: paymentData.PaymentId,
@@ -689,14 +704,14 @@ data() {
         const trip = this.currentBookingTrip;
 
         const chatResponse = await axios.post(
-          API_CONFIG.BASE_URL + "/chat/create",
+          `${API_CONFIG.BASE_URL}/chat/create`,
           { trip_id: trip.id },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const chatId = chatResponse.data.chatId;
 
         const bookingResponse = await axios.post(
-          API_CONFIG.BASE_URL + "/booking/create",
+          `${API_CONFIG.BASE_URL}/booking/create`,
           {
             trip_id: trip.id,
             chat_id: chatId,
@@ -711,7 +726,6 @@ data() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Эмитируем событие с полными данными бронирования
         emitter.emit('bookingCreated', {
           booking_id: bookingResponse.data.booking_id,
           trip_id: trip.id,
@@ -727,28 +741,22 @@ data() {
         this.closeModal();
 
         const userResponse = await axios.get(
-          API_CONFIG.BASE_URL +'/user/get-id',
-          { headers: { 'Authorization': `Bearer ${this.token}` } }
+          `${API_CONFIG.BASE_URL}/user/get-id`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Отправка сообщения водителю о бронированииAdd commentMore actions
         try {
           const messageContent = `Вашу поездку забронировали на ${this.searchParams.passengers} мест. Осталось свободных мест: ${trip.total_seats - trip.available_seats - this.searchParams.passengers}`;
-          
-          // Отправка через HTTP API
           await axios.post(
             `${API_CONFIG.BASE_URL}/chat/${chatId}/messages`,
             {
               content: messageContent,
-              sender_id: userResponse.data.user_id
+              sender_id: userResponse.data.user_id,
             },
             {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
+              headers: { Authorization: `Bearer ${token}` },
             }
           );
-          
           console.log('Уведомление водителю отправлено');
         } catch (error) {
           console.error('Ошибка при отправке уведомления водителю:', error);
@@ -766,49 +774,47 @@ data() {
     },
     async showPassengers(trip, locationType) {
       this.modalLocationType = locationType;
-      this.currentLocation = locationType === "departure" ? trip.departure_location : trip.arrival_location;
+      this.currentLocation = locationType === 'departure' ? trip.departure_location : trip.arrival_location;
       this.isLoadingPassengers = true;
       this.errorLoadingPassengers = null;
       try {
-        const response = await axios.get(API_CONFIG.BASE_URL + "/user/get-all", {
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-all`, {
           params: { trip_id: trip.id },
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+          headers: { Authorization: `Bearer ${Cookies.get('token')}` },
         });
-        this.passengers = (response.data.passengers || []).map((p) => ({
+        this.passengers = await Promise.all((response.data.passengers || []).map(async (p) => ({
           ...p,
-          name: p.name || "Не указано",
-          surname: p.surname || "",
-          gender: p.gender || "unknown",
+          name: p.name || 'Не указано',
+          surname: p.surname || '',
+          gender: p.gender || 'unknown',
           passenger_rating: p.passenger_rating ? parseFloat(p.passenger_rating) : null,
           seats_booked: p.seats_booked || 1,
           birthday: p.birthday || null,
-          //cost: p.cost || trip.cost,
           user_id: p.id || null,
-          //comment: p.comment || "",
-          avatarUrl: URL.createObjectURL(p.avatarUrl) || "/images/default-avatar.jpg",
-        }));
+          avatarUrl: await this.fetchAvatar(p.id),
+        })));
         this.showPassengersModal = true;
       } catch (error) {
-        this.errorLoadingPassengers = "Не удалось загрузить пассажиров";
-        this.$notify({ title: "Ошибка", text: this.errorLoadingPassengers, type: "error" });
+        this.errorLoadingPassengers = 'Не удалось загрузить пассажиров';
+        this.$notify({ title: 'Ошибка', text: this.errorLoadingPassengers, type: 'error' });
       } finally {
         this.isLoadingPassengers = false;
       }
     },
-      closeModal() {
-        this.showPaymentModal = false;
-        this.showPassengersModal = false;
-        this.showPaymentConfirmation = false;
-        this.showTripDetailsModal = false; // Close trip details modal
-        this.paymentError = "";
-        this.currentBookingTrip = null;
-        this.currentTrip = null; // Reset current trip
-        this.transactionId = "";
-        this.transactionDate = "";
-        this.resetPaymentForm();
-        this.passengers = [];
-        this.errorLoadingPassengers = null;
-      },
+    closeModal() {
+      this.showPaymentModal = false;
+      this.showPassengersModal = false;
+      this.showPaymentConfirmation = false;
+      this.showTripDetailsModal = false;
+      this.paymentError = "";
+      this.currentBookingTrip = null;
+      this.currentTrip = null;
+      this.transactionId = "";
+      this.transactionDate = "";
+      this.resetPaymentForm();
+      this.passengers = [];
+      this.errorLoadingPassengers = null;
+    },
     showTripDetails(trip) {
       this.currentTrip = trip;
       this.showTripDetailsModal = true;
@@ -824,56 +830,56 @@ data() {
       this.sortBy = "default";
     },
     handleImageError(event) {
-      event.target.src = "/images/default-avatar.jpg";
+      event.target.src = '/images/default-avatar.jpg';
     },
   },
 };
 </script>
-<style>
 
+<style>
 :root {
-  --primary-color: #1a73e8; /* Softer, modern blue for primary actions */
-  --secondary-color: #f8f9fa; /* Light gray for backgrounds */
-  --success-color: #34c759; /* Vibrant green for success states */
-  --error-color: #d93025; /* Google-inspired red for errors */
-  --text-color: #202124; /* Darker text for better contrast */
-  --border-color: #dadce0; /* Subtle border color */
-  --background-color: #ffffff; /* Clean white for cards */
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Softer shadow for depth */
-  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
-  --transition: all 0.2s ease; /* Smoother transitions */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Modern font stack */
+  --primary-color: #1a73e8;
+  --secondary-color: #f8f9fa;
+  --success-color: #34c759;
+  --error-color: #d93025;
+  --text-color: #202124;
+  --border-color: #dadce0;
+  --background-color: #ffffff;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --transition: all 0.2s ease;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .search-results-container {
   font-family: var(--font-family);
   background: var(--secondary-color);
   min-height: 100vh;
-  line-height: 1.5; /* Improved readability */
+  line-height: 1.5;
 }
 
 .search-results {
-  max-width: 1280px; /* Slightly wider for modern screens */
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 32px 16px; /* Consistent padding */
+  padding: 32px 16px;
 }
 
 h1 {
-  font-size: 32px; /* Larger for emphasis */
-  font-weight: 700; /* Bolder for hierarchy */
+  font-size: 32px;
+  font-weight: 700;
   margin-bottom: 32px;
   color: var(--text-color);
-  text-align: left; /* Aligned left for better flow */
-  letter-spacing: -0.02em; /* Subtle tightening for polish */
+  text-align: left;
+  letter-spacing: -0.02em;
 }
 
 .search-params-container {
   background: var(--background-color);
-  border-radius: 16px; /* Softer corners */
+  border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
   box-shadow: var(--shadow);
-  border: 1px solid var(--border-color); /* Subtle border for definition */
+  border: 1px solid var(--border-color);
 }
 
 .search-params {
@@ -886,7 +892,7 @@ h1 {
 
 .search-params p {
   margin: 0;
-  font-weight: 500; /* Slightly bolder for clarity */
+  font-weight: 500;
 }
 
 .sort-filter-container {
@@ -918,7 +924,7 @@ h1 {
   cursor: pointer;
   background: var(--background-color);
   transition: var(--transition);
-  appearance: none; /* Remove default browser styling */
+  appearance: none;
 }
 
 .sort-select select:focus {
@@ -934,7 +940,7 @@ h1 {
   transform: translateY(-50%);
   font-size: 16px;
   color: var(--text-color);
-  pointer-events: none; /* Prevent interaction */
+  pointer-events: none;
 }
 
 .filter-toggle {
@@ -953,7 +959,7 @@ h1 {
 }
 
 .filter-toggle:hover {
-  background: #e8f0fe; /* Subtle hover background */
+  background: #e8f0fe;
   border-color: var(--primary-color);
 }
 
@@ -984,7 +990,7 @@ h1 {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: var(--primary-color); /* Modern checkbox styling */
+  accent-color: var(--primary-color);
 }
 
 .trip-list {
@@ -1020,17 +1026,20 @@ h1 {
   gap: 16px;
 }
 
-.driver-avatar {
-  width: 64px;
-  height: 64px;
+.driver-avatar,
+.passenger-avatar {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--border-color);
-  transition: var(--transition);
+  border: 3px solid #004281;
+  cursor: pointer;
+  transition: transform 0.3s ease;
 }
 
-.driver-avatar:hover {
-  border-color: var(--primary-color);
+.driver-avatar:hover,
+.passenger-avatar:hover {
+  transform: scale(1.05);
 }
 
 .driver-name {
@@ -1044,11 +1053,11 @@ h1 {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #5f6368; /* Softer gray for secondary text */
+  color: #5f6368;
 }
 
 .star {
-  color: #f4b400; /* Google-yellow for stars */
+  color: #f4b400;
   font-size: 16px;
 }
 
@@ -1104,12 +1113,12 @@ h1 {
 }
 
 .location-link:hover {
-  color: #174ea6; /* Darker blue on hover */
+  color: #174ea6;
   text-decoration: underline;
 }
 
 .route-arrow {
-  color: #bdc1c6; /* Subtle gray for arrows */
+  color: #bdc1c6;
 }
 
 .seats-price-row {
@@ -1220,12 +1229,12 @@ h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4); /* Slightly darker for better contrast */
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(6px); /* Enhanced blur for modern look */
+  backdrop-filter: blur(6px);
 }
 
 .modal-content {
@@ -1504,13 +1513,6 @@ input:focus {
   box-shadow: var(--shadow-hover);
 }
 
-.passenger-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-}
-
 .passenger-name {
   font-weight: 600;
   font-size: 18px;
@@ -1531,23 +1533,7 @@ input:focus {
   padding: 4px 10px;
   border-radius: 8px;
 }
-.trip-details-content {
-  padding: 20px;
-  background: var(--secondary-color);
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
 
-.trip-details-info p {
-  margin: 12px 0;
-  font-size: 16px;
-  color: var(--text-color);
-}
-
-.trip-details-info p strong {
-  font-weight: 600;
-  color: var(--text-color);
-}
 .passenger-gender.female {
   background: #fce4ec;
   color: #c2185b;
