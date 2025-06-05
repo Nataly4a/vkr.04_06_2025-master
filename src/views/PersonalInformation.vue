@@ -225,21 +225,25 @@ export default {
     
     async fetchAvatar() {
       try {
-        const token = Cookies.get('token');
-        const response = await axios.get(API_CONFIG.BASE_URL +'/user/get-img', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (response.data.success && response.data.avatarUrl) {
-            this.avatarUrl = response.data.avatarUrl;
-            console.log("check avatarUrl",this.avatarUrl)
-        }
+          const token = Cookies.get('token');
+          const response = await axios.get(API_CONFIG.BASE_URL + '/user/get-img', {
+              headers: {
+                  'Authorization': `Bearer ${token}`
+              },
+              responseType: 'blob' // Важно: указываем, что ожидаем бинарные данные
+          });
+          
+          if (response.data) {
+              // Создаем URL из blob данных
+              this.avatarUrl = URL.createObjectURL(response.data);
+              console.log("Avatar loaded", this.avatarUrl);
+          }
       } catch (error) {
           console.error("Ошибка при загрузке аватара:", error);
+          // Можно установить аватар по умолчанию
+          this.avatarUrl = '/default-avatar.jpg';
       }
-    },
+  },
 
     async fetchUserData() {
       try {
