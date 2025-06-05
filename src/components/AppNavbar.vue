@@ -331,7 +331,8 @@ export default {
         if (userId && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
             type: 'auth',
-            user_id: userId
+            user_id: 26
+            //user_id: userId
           }));
         }
       };
