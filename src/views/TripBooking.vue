@@ -487,9 +487,9 @@ export default {
           seats_booked: passenger.seats_booked || 1,
           birthday: passenger.birthday || null,
           position: passenger.position || '0',
-          user_id: passenger.user_id || null,
+          user_id: passenger.id || null,
           comment: passenger.comment || '',
-          avatarUrl: await this.fetchAvatar(passenger.user_id) ,
+          avatarUrl: await this.fetchAvatar(passenger.id) ,
         })));
 
         this.showPassengersModal = true;
