@@ -785,7 +785,7 @@ data() {
           //cost: p.cost || trip.cost,
           user_id: p.id || null,
           //comment: p.comment || "",
-          avatarUrl: p.avatarUrl || "/images/default-avatar.jpg",
+          avatarUrl: URL.createObjectURL(p.avatarUrl) || "/images/default-avatar.jpg",
         }));
         this.showPassengersModal = true;
       } catch (error) {
