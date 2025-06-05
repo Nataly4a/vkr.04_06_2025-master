@@ -186,11 +186,11 @@ export default {
       
       const formData = new FormData();
       formData.append('avatar', file);
-      console.log("formData", formData)
+      console.log("formData", file)
       
       try {
         const token = Cookies.get('token');
-        const response = await axios.put(API_CONFIG.BASE_URL +'/user/create-img', file, {
+        const response = await axios.put(API_CONFIG.BASE_URL +'/user/create-img', formData, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
