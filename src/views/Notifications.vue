@@ -1,4 +1,5 @@
 <template>
+  <AppNavbar />
   <div class="notifications-page" :class="{'dark-theme': isDarkTheme}">
     <div class="notifications-header">
       <h1>Уведомления</h1>
@@ -52,9 +53,13 @@
 import axios from 'axios';
 import { API_CONFIG } from '@/config/api';
 import Cookies from 'js-cookie';
+import AppNavbar from "@/components/AppNavbar.vue";
 
 export default {
   name: 'NotificationsPage',
+  components: {
+    AppNavbar,
+  },
   data() {
     return {
       notifications: [],
@@ -197,14 +202,11 @@ export default {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      //const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-      //const wsUrl = `${wsProtocol}${window.location.host}/ws`;
       const wsUrl = `wss://unigo-1rot.onrender.com/ws`;
       
       this.ws = new WebSocket(wsUrl);
       
       this.ws.onopen = () => {
-        // Аутентификация через WebSocket
         this.ws.send(JSON.stringify({
           type: 'auth',
           user_id: userResponse.data.user_id
@@ -215,7 +217,6 @@ export default {
         const data = JSON.parse(event.data);
         
         if (data.type === 'new_notification') {
-          // Добавляем новое уведомление в начало списка
           this.notifications.unshift(data.notification);
         }
       };
@@ -234,130 +235,199 @@ export default {
 
 <style scoped>
 .notifications-page {
-  max-width: 800px;
-  margin: 80px auto 20px;
-  padding: 20px;
+  max-width: 900px;
+  margin: 90px auto 30px;
+  padding: 25px;
   background-color: var(--bg-color);
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .notifications-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1));
+  border-radius: 8px 8px 0 0;
+}
+
+.notifications-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  animation: fadeIn 0.5s ease-in;
 }
 
 .mark-all-read {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .mark-all-read:hover {
   background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.mark-all-read:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .loading-spinner,
 .no-notifications {
   text-align: center;
-  padding: 40px;
+  padding: 50px 20px;
   color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 500;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .notifications-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
 }
 
 .notification-item {
   display: flex;
   align-items: center;
-  padding: 15px;
+  padding: 20px;
   background-color: var(--card-bg);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
   position: relative;
+  border: 1px solid var(--border-color-light);
 }
 
 .notification-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  background-color: var(--card-hover);
 }
 
 .notification-item.unread {
   background-color: var(--unread-bg);
+  border-color: var(--primary-color);
 }
 
 .notification-icon {
-  font-size: 24px;
-  margin-right: 15px;
-  width: 40px;
+  font-size: 28px;
+  margin-right: 20px;
+  width: 50px;
   text-align: center;
+  color: var(--text-primary);
+  transition: transform 0.3s ease;
+}
+
+.notification-item:hover .notification-icon {
+  transform: rotate(15deg);
 }
 
 .notification-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .notification-message {
   margin: 0;
-  font-size: 16px;
+  font-size: 1.1rem;
   color: var(--text-color);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .notification-time {
-  margin: 5px 0 0;
-  font-size: 12px;
+  margin: 0;
+  font-size: 0.9rem;
   color: var(--text-secondary);
+  font-style: italic;
 }
 
 .unread-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background-color: var(--primary-color);
   border-radius: 50%;
-  margin-left: 10px;
+  margin-left: 15px;
+  box-shadow: 0 0 5px var(--primary-color);
+  animation: pulse 1.5s infinite;
 }
 
 .load-more {
-  margin-top: 20px;
-  padding: 10px;
+  margin-top: 25px;
+  padding: 12px 25px;
   background-color: var(--secondary-bg);
   color: var(--text-color);
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .load-more:hover {
   background-color: var(--menu-item-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.load-more:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .load-more:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Темная тема */
 .dark-theme .notifications-page {
   background-color: var(--dropdown-bg);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .dark-theme .notification-item.unread {
   background-color: var(--dark-unread-bg);
+  border-color: var(--primary-color-dark);
+}
+
+.dark-theme .notification-icon {
+  color: var(--text-primary-dark);
+}
+
+.dark-theme .notification-message {
+  color: var(--text-color-dark);
+}
+
+.dark-theme .notification-time {
+  color: var(--text-secondary-dark);
 }
 </style>
 
@@ -365,13 +435,32 @@ export default {
 :root {
   --unread-bg: rgba(0, 66, 129, 0.1);
   --card-bg: #ffffff;
-  --text-secondary: #777777;
+  --card-hover: #f9f9f9;
+  --text-secondary: #666666;
+  --border-color-light: #e0e0e0;
+  --text-primary: #333333;
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --secondary-bg: #e9ecef;
+  --menu-item-hover: #dfe4ea;
 }
 
 .dark-theme {
   --unread-bg: rgba(74, 156, 255, 0.1);
   --dark-unread-bg: rgba(74, 156, 255, 0.2);
   --card-bg: #2d2d2d;
-  --text-secondary: #aaaaaa;
+  --card-hover: #3a3a3a;
+  --text-secondary: #bbbbbb;
+  --border-color-light: #444444;
+  --text-primary: #e0e0e0;
+  --text-primary-dark: #ffffff;
+  --text-color-dark: #ffffff;
+  --text-secondary-dark: #cccccc;
+  --primary-color: #4dabf7;
+  --primary-color-dark: #339af0;
+  --primary-hover: #339af0;
+  --secondary-bg: #3c3f4a;
+  --menu-item-hover: #4a4e5a;
+  --dropdown-bg: #252830;
 }
 </style>
