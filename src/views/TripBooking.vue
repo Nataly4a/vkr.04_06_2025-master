@@ -460,48 +460,48 @@ export default {
             timeZone: 'UTC' // Указываем UTC, если время приходит с Z в конце
           });
     },
-    async showPassengers(trip) {
-      this.selectedTrip = trip;
-      this.modalLocationType = 'departure';
-      this.currentLocation = `${trip.from} → ${trip.to}`;
-      this.isLoadingPassengers = true;
-      this.errorLoadingPassengers = null;
-      try {
+async showPassengers(trip) {
+    this.selectedTrip = trip;
+    this.modalLocationType = 'departure';
+    this.currentLocation = `${trip.from} → ${trip.to}`;
+    this.isLoadingPassengers = true;
+    this.errorLoadingPassengers = null;
+    try {
         const token = Cookies.get('token');
         const passengersResponse = await axios.get(API_CONFIG.BASE_URL + '/user/get-all', {
-          params: { trip_id: trip.id_trip },
-          headers: { Authorization: `Bearer ${token}` },
+            params: { trip_id: trip.id_trip },
+            headers: { Authorization: `Bearer ${token}` },
         });
 
         console.log("Ответ API /user/get-all:", passengersResponse.data);
 
         this.passengers = await Promise.all((passengersResponse.data.passengers || []).map(async (passenger) => ({
-          ...passenger,
-          name: passenger.name || 'Не указано',
-          surname: passenger.surname || '',
-          gender: passenger.gender || 'unknown',
-          passenger_rating: passenger.passenger_rating ? parseFloat(passenger.passenger_rating) : null,
-          seats_booked: passenger.seats_booked || 1,
-          birthday: passenger.birthday || null,
-          position: passenger.position || '0',
-          user_id: passenger.user_id || null, // Corrected to use user_id
-          comment: passenger.comment || '',
-          avatarUrl: await this.fetchAvatar(passenger.user_id), // Corrected to use user_id
+            ...passenger,
+            name: passenger.name || 'Не указано',
+            surname: passenger.surname || '',
+            gender: passenger.gender || 'unknown',
+            passenger_rating: passenger.passenger_rating ? parseFloat(passenger.passenger_rating) : null,
+            seats_booked: passenger.seats_booked || 1,
+            birthday: passenger.birthday || null,
+            position: passenger.position || '0',
+            user_id: passenger.user_id || null,
+            comment: passenger.comment || '',
+            avatarUrl: await this.fetchAvatar(passenger.user_id), // Always fetch avatar using fetchAvatar
         })));
 
         this.showPassengersModal = true;
-      } catch (error) {
+    } catch (error) {
         console.error("Ошибка при загрузке пассажиров:", error);
         this.errorLoadingPassengers = "Не удалось загрузить пассажиров";
         this.$notify({
-          title: "Ошибка",
-          text: "Не удалось загрузить информацию о пассажирах",
-          type: "error",
+            title: "Ошибка",
+            text: "Не удалось загрузить информацию о пассажирах",
+            type: "error",
         });
-      } finally {
+    } finally {
         this.isLoadingPassengers = false;
-      }
-    },
+    }
+},
     confirmCancel(trip) {
       if (confirm('Вы уверены, что хотите отменить бронирование?')) {
         this.cancelBooking(trip);
