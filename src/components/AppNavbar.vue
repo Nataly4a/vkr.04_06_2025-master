@@ -324,15 +324,16 @@ export default {
       
       this.ws = new WebSocket(wsUrl);
       
-      this.ws.onopen = () => {
+      this.ws.onopen = async() => {
         console.log('WebSocket подключен');
         // Получаем userId из токена или другого источника
-        const userId = this.getUserIdFromToken();
+        const userId = await this.getUserIdFromToken();
         console.log("важный айди",userId)
+
         if (userId && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
             type: 'auth',
-            user_id: 26
+            user_id: userId
             //user_id: userId
           }));
         }
@@ -371,13 +372,6 @@ export default {
         );
         console.log("userResponse.data.user_id",userResponse.data.user_id)
         return userResponse.data.user_id;
-      /*try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.userId;
-      } catch (e) {
-        console.error('Error parsing token:', e);
-        return null;
-      }*/
     },
     
     showToastNotification(notification) {
