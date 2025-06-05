@@ -360,7 +360,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import AppNavbar from "@/components/AppNavbar.vue";
 import axios from "axios";
@@ -458,18 +457,32 @@ export default {
     async fetchAvatar(userId) {
       try {
         const token = Cookies.get('token');
+        if (!token) {
+          console.warn('Токен авторизации отсутствует');
+          return 'https://via.placeholder.com/120';
+        }
+
         const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-img/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           responseType: 'blob',
         });
-        if (response.data) {
-          return URL.createObjectURL(response.data);
+
+        if (response.data && response.data.type.startsWith('image/')) {
+          const avatarUrl = URL.createObjectURL(response.data);
+          console.log(`Аватар для userId ${userId} успешно загружен:`, avatarUrl);
+          return avatarUrl;
+        } else {
+          console.warn(`Данные аватара для userId ${userId} не являются изображением`);
+          return 'https://via.placeholder.com/120';
         }
       } catch (error) {
         console.error(`Ошибка при загрузке аватара для userId ${userId}:`, error);
-        return '/images/default-avatar.jpg';
+        if (error.response?.status === 404) {
+          console.warn(`Аватар для userId ${userId} не найден на сервере`);
+        }
+        return 'https://via.placeholder.com/120';
       }
     },
     async fetchTrips() {
@@ -486,10 +499,14 @@ export default {
           headers: { Authorization: `Bearer ${Cookies.get('token')}` },
         });
         if (response.data.success) {
-          this.trips = await Promise.all(response.data.trips.map(async (trip) => ({
-            ...trip,
-            avatarUrl: await this.fetchAvatar(trip.driver_id),
-          })));
+          this.trips = await Promise.all(response.data.trips.map(async (trip) => {
+            const avatarUrl = await this.fetchAvatar(trip.driver_id);
+            console.log(`Trip ID: ${trip.id}, Driver ID: ${trip.driver_id}, Avatar URL: ${avatarUrl}`);
+            return {
+              ...trip,
+              avatarUrl,
+            };
+          }));
           this.sortedTrips = [...this.trips];
           this.filteredTrips = [...this.trips];
           if (!this.trips.length) {
@@ -501,6 +518,7 @@ export default {
       } catch (error) {
         this.error = this.getErrorMessage(error);
         this.trips = [];
+        console.error("Ошибка загрузки поездок:", error);
       } finally {
         this.loading = false;
       }
@@ -830,7 +848,7 @@ export default {
       this.sortBy = "default";
     },
     handleImageError(event) {
-      event.target.src = '/images/default-avatar.jpg';
+      event.target.src = 'https://via.placeholder.com/120';
     },
   },
 };
