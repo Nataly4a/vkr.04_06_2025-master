@@ -367,6 +367,7 @@ export default {
           API_CONFIG.BASE_URL +'/user/get-id',
           { headers: { 'Authorization': `Bearer ${Cookies.get('token')}` } }
         );
+        console.log("userResponse.data.user_id",userResponse.data.user_id)
         return userResponse.data.user_id;
       /*try {
         const payload = JSON.parse(atob(token.split('.')[1]));
