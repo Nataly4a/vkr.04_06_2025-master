@@ -193,7 +193,7 @@
             <div class="driver-info">
               <router-link :to="`/driver/${trip.driver_id}`" :aria-label="`Профиль водителя ${trip.name} ${trip.surname}`">
                 <img
-                  :src="trip.avatarUrl || '/images/default-avatar.jpg'"
+                  :src="URL.createObjectURL(trip.avatarUrl) || '/images/default-avatar.jpg'"
                   alt="Аватар водителя"
                   class="driver-avatar"
                   @error="handleImageError"
