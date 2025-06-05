@@ -328,6 +328,7 @@ export default {
         console.log('WebSocket подключен');
         // Получаем userId из токена или другого источника
         const userId = this.getUserIdFromToken();
+        console.log("важный айди",userId)
         if (userId && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
             type: 'auth',
