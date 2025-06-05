@@ -448,12 +448,9 @@ export default {
         ? 'Неверная дата' 
         : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     },
-
-
     formatTime(dateTimeString) {
       console.log("dateTimeString", dateTimeString);
       if (!dateTimeString) return 'Не указано';
-      
       const date = new Date(dateTimeString);
       return isNaN(date.getTime())
         ? 'Неверное время'
@@ -478,7 +475,7 @@ export default {
 
         console.log("Ответ API /user/get-all:", passengersResponse.data);
 
-        this.passengers = Promise.all((passengersResponse.data.passengers || []).map(async (passenger) => ({
+        this.passengers = await Promise.all((passengersResponse.data.passengers || []).map(async (passenger) => ({
           ...passenger,
           name: passenger.name || 'Не указано',
           surname: passenger.surname || '',
@@ -487,9 +484,9 @@ export default {
           seats_booked: passenger.seats_booked || 1,
           birthday: passenger.birthday || null,
           position: passenger.position || '0',
-          user_id: passenger.id || null,
+          user_id: passenger.user_id || null, // Corrected to use user_id
           comment: passenger.comment || '',
-          avatarUrl: await this.fetchAvatar(passenger.id) ,
+          avatarUrl: await this.fetchAvatar(passenger.user_id), // Corrected to use user_id
         })));
 
         this.showPassengersModal = true;
@@ -592,11 +589,9 @@ export default {
     handleImageError(event) {
       event.target.src = '/default-avatar.jpg';
     },
-    //новое
     setTempRating(bookingId, rating) {
       this.$set(this.tempRating, bookingId, rating);
     },
-    
     async submitRating(trip) {
       const bookingId = trip.booking_id;
       
@@ -647,11 +642,9 @@ export default {
         this.$delete(this.isSubmittingRating, bookingId);
       }
     },
-  
   },
 };
 </script>
-
 <style scoped>
 :root {
   --primary-color: #1a73e8; /* Modern blue for primary actions */
