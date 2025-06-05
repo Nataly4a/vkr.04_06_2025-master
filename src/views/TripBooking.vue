@@ -333,6 +333,37 @@ export default {
         });
       }
     },
+    async fetchAvatar(userId) {
+      try {
+        const token = Cookies.get('token');
+        //if (!token) {
+        //  console.warn('Токен авторизации отсутствует');
+        //  return 'https://via.placeholder.com/120';
+        //}
+
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-img/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'blob',
+        });
+
+        if (response.data && response.data.type.startsWith('image/')) {
+          const avatarUrl = URL.createObjectURL(response.data);
+          console.log(`Аватар для userId ${userId} успешно загружен:`, avatarUrl);
+          return avatarUrl;
+        } else {
+          console.warn(`Данные аватара для userId ${userId} не являются изображением`);
+          return 'https://via.placeholder.com/120';
+        }
+      } catch (error) {
+        console.error(`Ошибка при загрузке аватара для userId ${userId}:`, error);
+        if (error.response?.status === 404) {
+          console.warn(`Аватар для userId ${userId} не найден на сервере`);
+        }
+        return 'https://via.placeholder.com/120';
+      }
+    },
     async handleBookingCreated(bookingData) {
       // Добавляем новую поездку в список
       const newTrip = {
@@ -447,7 +478,7 @@ export default {
 
         console.log("Ответ API /user/get-all:", passengersResponse.data);
 
-        this.passengers = (passengersResponse.data.passengers || []).map(passenger => ({
+        this.passengers = Promise.all((passengersResponse.data.passengers || []).map(async (passenger) => ({
           ...passenger,
           name: passenger.name || 'Не указано',
           surname: passenger.surname || '',
@@ -458,8 +489,8 @@ export default {
           position: passenger.position || '0',
           user_id: passenger.user_id || null,
           comment: passenger.comment || '',
-          avatarUrl: passenger.avatarUrl || '/default-avatar.jpg',
-        }));
+          avatarUrl: await this.fetchAvatar(passenger.user_id) ,
+        })));
 
         this.showPassengersModal = true;
       } catch (error) {
