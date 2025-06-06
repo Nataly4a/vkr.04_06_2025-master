@@ -333,6 +333,37 @@ export default {
         });
       }
     },
+    async fetchAvatar(userId) {
+      try {
+        const token = Cookies.get('token');
+        //if (!token) {
+        //  console.warn('Токен авторизации отсутствует');
+        //  return 'https://via.placeholder.com/120';
+        //}
+
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-img/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'blob',
+        });
+
+        if (response.data && response.data.type.startsWith('image/')) {
+          const avatarUrl = URL.createObjectURL(response.data);
+          console.log(`Аватар для userId ${userId} успешно загружен:`, avatarUrl);
+          return avatarUrl;
+        } else {
+          console.warn(`Данные аватара для userId ${userId} не являются изображением`);
+          return 'https://via.placeholder.com/120';
+        }
+      } catch (error) {
+        console.error(`Ошибка при загрузке аватара для userId ${userId}:`, error);
+        if (error.response?.status === 404) {
+          console.warn(`Аватар для userId ${userId} не найден на сервере`);
+        }
+        return 'https://via.placeholder.com/120';
+      }
+    },
     async handleBookingCreated(bookingData) {
       // Добавляем новую поездку в список
       const newTrip = {
@@ -417,12 +448,9 @@ export default {
         ? 'Неверная дата' 
         : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     },
-
-
     formatTime(dateTimeString) {
       console.log("dateTimeString", dateTimeString);
       if (!dateTimeString) return 'Не указано';
-      
       const date = new Date(dateTimeString);
       return isNaN(date.getTime())
         ? 'Неверное время'
@@ -432,48 +460,48 @@ export default {
             timeZone: 'UTC' // Указываем UTC, если время приходит с Z в конце
           });
     },
-    async showPassengers(trip) {
-      this.selectedTrip = trip;
-      this.modalLocationType = 'departure';
-      this.currentLocation = `${trip.from} → ${trip.to}`;
-      this.isLoadingPassengers = true;
-      this.errorLoadingPassengers = null;
-      try {
+async showPassengers(trip) {
+    this.selectedTrip = trip;
+    this.modalLocationType = 'departure';
+    this.currentLocation = `${trip.from} → ${trip.to}`;
+    this.isLoadingPassengers = true;
+    this.errorLoadingPassengers = null;
+    try {
         const token = Cookies.get('token');
         const passengersResponse = await axios.get(API_CONFIG.BASE_URL + '/user/get-all', {
-          params: { trip_id: trip.id_trip },
-          headers: { Authorization: `Bearer ${token}` },
+            params: { trip_id: trip.id_trip },
+            headers: { Authorization: `Bearer ${token}` },
         });
 
         console.log("Ответ API /user/get-all:", passengersResponse.data);
 
-        this.passengers = (passengersResponse.data.passengers || []).map(passenger => ({
-          ...passenger,
-          name: passenger.name || 'Не указано',
-          surname: passenger.surname || '',
-          gender: passenger.gender || 'unknown',
-          passenger_rating: passenger.passenger_rating ? parseFloat(passenger.passenger_rating) : null,
-          seats_booked: passenger.seats_booked || 1,
-          birthday: passenger.birthday || null,
-          position: passenger.position || '0',
-          user_id: passenger.user_id || null,
-          comment: passenger.comment || '',
-          avatarUrl: passenger.avatarUrl || '/default-avatar.jpg',
-        }));
+        this.passengers = await Promise.all((passengersResponse.data.passengers || []).map(async (passenger) => ({
+            ...passenger,
+            name: passenger.name || 'Не указано',
+            surname: passenger.surname || '',
+            gender: passenger.gender || 'unknown',
+            passenger_rating: passenger.passenger_rating ? parseFloat(passenger.passenger_rating) : null,
+            seats_booked: passenger.seats_booked || 1,
+            birthday: passenger.birthday || null,
+            position: passenger.position || '0',
+            user_id: passenger.user_id || null,
+            comment: passenger.comment || '',
+            avatarUrl: await this.fetchAvatar(passenger.user_id), // Always fetch avatar using fetchAvatar
+        })));
 
         this.showPassengersModal = true;
-      } catch (error) {
+    } catch (error) {
         console.error("Ошибка при загрузке пассажиров:", error);
         this.errorLoadingPassengers = "Не удалось загрузить пассажиров";
         this.$notify({
-          title: "Ошибка",
-          text: "Не удалось загрузить информацию о пассажирах",
-          type: "error",
+            title: "Ошибка",
+            text: "Не удалось загрузить информацию о пассажирах",
+            type: "error",
         });
-      } finally {
+    } finally {
         this.isLoadingPassengers = false;
-      }
-    },
+    }
+},
     confirmCancel(trip) {
       if (confirm('Вы уверены, что хотите отменить бронирование?')) {
         this.cancelBooking(trip);
@@ -561,11 +589,9 @@ export default {
     handleImageError(event) {
       event.target.src = '/default-avatar.jpg';
     },
-    //новое
     setTempRating(bookingId, rating) {
       this.$set(this.tempRating, bookingId, rating);
     },
-    
     async submitRating(trip) {
       const bookingId = trip.booking_id;
       
@@ -616,11 +642,9 @@ export default {
         this.$delete(this.isSubmittingRating, bookingId);
       }
     },
-  
   },
 };
 </script>
-
 <style scoped>
 :root {
   --primary-color: #1a73e8; /* Modern blue for primary actions */

@@ -457,10 +457,10 @@ export default {
     async fetchAvatar(userId) {
       try {
         const token = Cookies.get('token');
-        if (!token) {
-          console.warn('Токен авторизации отсутствует');
-          return 'https://via.placeholder.com/120';
-        }
+        //if (!token) {
+        //  console.warn('Токен авторизации отсутствует');
+        //  return 'https://via.placeholder.com/120';
+        //}
 
         const response = await axios.get(`${API_CONFIG.BASE_URL}/user/get-img/${userId}`, {
           headers: {
