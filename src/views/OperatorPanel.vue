@@ -224,7 +224,7 @@ export default {
 </script>
 
 <style scoped>
-/* Базовые стили */
+/* Базовые стили ага */
 * {
   box-sizing: border-box;
 }
