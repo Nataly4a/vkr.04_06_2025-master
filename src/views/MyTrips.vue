@@ -445,7 +445,8 @@ export default {
         const token = Cookies.get('token');
 
         await axios.put(
-          API_CONFIG.BASE_URL + `/trip/cancell/${tripId}`, // Добавляем seats_booked в тело запроса
+          API_CONFIG.BASE_URL + `/trip/cancell/${tripId}`,
+          {},  // Добавьте пустой объект, если тело не требу // Добавляем seats_booked в тело запроса
           {
             headers: { Authorization: `Bearer ${token}` },
           }
