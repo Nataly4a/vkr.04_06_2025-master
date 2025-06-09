@@ -444,12 +444,13 @@ export default {
     async cancelTrip(tripId) {
       try {
         const token = Cookies.get('token');
-        
-        await axios.delete(API_CONFIG.BASE_URL + `/api/trip/${tripId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+
+        await axios.put(
+          API_CONFIG.BASE_URL + `/trip/cancell/${tripId}`, // Добавляем seats_booked в тело запроса
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         await this.notifyPassengers(tripId, 'Поездка была отменена водителем.');
 
