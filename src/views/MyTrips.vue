@@ -310,6 +310,8 @@ export default {
           withCredentials: true,
         });
 
+        console.log(response.data.data)
+
         this.userTrips = response.data.data || [];
       } catch (error) {
         console.error("Ошибка при загрузке поездок:", error);
