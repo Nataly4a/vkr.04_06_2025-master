@@ -442,7 +442,6 @@ export default {
     },
 
     async cancelTrip(tripId) {
-      try {
         const token = Cookies.get('token');
 
         await axios.put(
@@ -456,10 +455,6 @@ export default {
 
         this.loadUserTrips();
         this.$toast.success('Поездка отменена. Пассажиры уведомлены.');
-      } catch (error) {
-        console.error("Ошибка при отмене поездки:", error);
-        this.$toast.error('Ошибка при отмене поездки');
-      }
     },
 
     confirmCancelPassenger(userId) {
